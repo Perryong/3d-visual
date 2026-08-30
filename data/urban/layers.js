@@ -129,9 +129,26 @@ export const PARTS = [
 
 export const PART_BY_ID = Object.fromEntries(PARTS.map((p) => [p.id, p]));
 
+// Named areas in scene units (x east, z south) for the observation thumbnails.
+// cbd and punggol are nudged from the plan's first draft: the real core
+// polygon and the tallest towers in buildings.json centre near (1.7, 2.2),
+// and the Punggol growth polygon in growth.json sits at x 5.3-6.7 / z -7.1--6.0
+// — both fall outside a straight x0-5/z4-9 or x7-14/z-11--5 box, which would
+// render those two thumbnails as empty plate.
+export const AREAS = {
+  island: { x: [-20, 22], z: [-12, 14] },     // whole main island
+  central: { x: [-6, 8], z: [-6, 8] },        // catchment + city
+  cbd: { x: [-3, 7], z: [-3, 7] },            // Marina Bay / Raffles Place
+  punggol: { x: [3, 10], z: [-9, -4] },       // north-east new town
+  jurong: { x: [-16, -8], z: [-2, 6] },       // west industrial + lake district
+};
+
 export const OBSERVATIONS = [
-  { title: 'Green core, built ring', text: 'The central catchment sits at the centre of every layer; housing, roads and density all wrap around it.' },
-  { title: 'Core aligns across layers', text: 'The deep-orange core in II, the road convergence in III and the deepest blue in V all fall on the same footprint.' },
-  { title: 'Growth moves outward', text: 'Recent and future areas in IV are on the periphery — Punggol, Tengah, Woodlands — while renewal follows the old waterfront.' },
-  { title: 'Grain tells history', text: 'VI reads fine in the centre and coarse in the new towns: the block size is a proxy for era.' },
+  { layer: 'L-01', area: 'central', title: 'Strong ecological base', text: 'The central catchment sits at the centre of every layer; parks and reservoirs form a connected green core.' },
+  { layer: 'L-02', area: 'cbd', title: 'Concentrated core functions', text: 'Commercial and civic functions cluster on the southern waterfront around Marina Bay; the deep-orange core is the pivot of the polycentric plan.' },
+  { layer: 'L-03', area: 'central', title: 'Efficient transport network', text: 'Expressways stitch the island east–west; MRT lines radiate from the core and loop through the new towns.' },
+  { layer: 'L-04', area: 'punggol', title: 'Continuous growth & renewal', text: 'Recent and future areas sit on the periphery — Punggol, Tengah, Woodlands — while renewal follows the old waterfront.' },
+  { layer: 'L-05', area: 'cbd', title: 'High central density', text: 'Floor-area intensity peaks in the core and the tallest HDB towns, fading toward the coast.' },
+  { layer: 'L-06', area: 'cbd', title: 'Compact & diverse fabric', text: 'Fine shophouse grain in the centre against the coarse slab-and-tower grain of the new towns.' },
+  { layer: 'L-07', area: 'island', title: 'Strong regional connectivity', text: 'Singapore sits at the tip of the peninsula between the Johor and Singapore straits, a hub for the region.' },
 ];

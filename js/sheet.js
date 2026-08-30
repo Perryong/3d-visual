@@ -33,6 +33,13 @@ export function bootSheet({ data, build, theme }) {
 
   const ui = createUI({ onSelect: select, data });
 
+  let thumbs = null;
+  if (api.poster && data.OBSERVATIONS) {
+    import('./urban/thumbs.js').then(({ createThumbs }) => {
+      thumbs = createThumbs(api, document.getElementById('thumb-canvas'));
+    });
+  }
+
   function select(partId) {
     selected = partId === selected ? null : partId;
     api.setSelected(selected);
@@ -187,6 +194,7 @@ export function bootSheet({ data, build, theme }) {
     api.controls.update();
     api.renderer.render(api.scene, api.camera);
     callouts.update();
+    thumbs?.update();
     requestAnimationFrame(tick);
   }
 

@@ -47,6 +47,11 @@ body::before {
 .legend li { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
 .data__block h5 { margin: 10px 0 2px; font-size: 11px; color: var(--dim); font-weight: 500; }
 
+#thumb-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 5; display: none; }
+body.is-poster #thumb-canvas { display: block; }
+.obs { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; margin: 0 0 18px; }
+.thumb { width: 96px; height: 96px; border-radius: 50%; background: var(--plate); border: 1px solid var(--rule); }
+
 @media (prefers-color-scheme: dark) {
   /* The board is a paper artefact; it stays light in every scheme. */
 }

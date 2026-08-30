@@ -65,6 +65,13 @@ pyrosm). Contours are a separate, optional layer: they need `rasterio` and
 fetches for you. Without them the bake skips the layer and prints a warning;
 `data/urban/contours.json` is committed empty in this repo.
 
+### Poster view
+
+`urban.html?view=poster` lays the board out as a portrait analysis poster: fixed
+axonometric stack with alignment guides, numbered modules on the left, key
+observations with live thumbnails on the right, scale bar and compass. "Save
+PNG" exports the 3D field; use the browser's print for the whole board.
+
 ## How it fits together
 
 | File | Job |
