@@ -84,7 +84,7 @@ export function bootSheet({ data, build, theme }) {
 
   // ---- Toggles ------------------------------------------------------------
   const blueprintToggle = document.getElementById('toggle-blueprint');
-  blueprintToggle.addEventListener('change', () => api.setBlueprint(blueprintToggle.checked));
+  blueprintToggle?.addEventListener('change', () => api.setBlueprint(blueprintToggle.checked));
 
   const calloutToggle = document.getElementById('toggle-callouts');
   calloutToggle.addEventListener('change', () => callouts.setEnabled(calloutToggle.checked));

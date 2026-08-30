@@ -31,7 +31,7 @@ export function createUI({ onSelect, data }) {
           <span class="bom__name">${p.name}</span>
           <span class="bom__qty">${p.qty}</span>
           ${p.legend ? `<span class="bom__legend">${p.legend.slice(0, 3).map((l) =>
-            `<i style="background:${l.swatch}" title="${l.label}"></i>`).join('')}</span>` : ''}
+            `<i style="background:${l.swatch}" title="${l.label}" aria-hidden="true"></i>`).join('')}</span>` : ''}
         </button>`;
       list.appendChild(row);
     });
@@ -55,7 +55,7 @@ export function createUI({ onSelect, data }) {
   // ---- Data panel -------------------------------------------------------
   const legendList = (legend) =>
     `<ul class="legend">${legend.map((l) =>
-      `<li><i style="background:${l.swatch}"></i><span>${l.label}</span></li>`).join('')}</ul>`;
+      `<li><i style="background:${l.swatch}" aria-hidden="true"></i><span>${l.label}</span></li>`).join('')}</ul>`;
 
   const EMPTY = data.OBSERVATIONS
     ? `

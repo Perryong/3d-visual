@@ -47,6 +47,10 @@ KINDS = {
 QUANTILES = {0, 1, 2, 3, 4}
 
 
+# Per-file coordinate-bound overrides; anything not listed uses BOUND.
+BOUNDS = {"region": REGION_BOUND, "coast": 30.0}
+
+
 def check() -> int:
     bad = 0
     for name, kind in FILES.items():
@@ -55,36 +59,38 @@ def check() -> int:
             print(f"MISSING {path}")
             bad += 1
             continue
+        file_bad = 0
         doc = json.loads(path.read_text())
         feats = doc.get("features", [])
         if doc.get("type") != kind:
             print(f"{name}: type {doc.get('type')!r} != {kind!r}")
-            bad += 1
+            file_bad += 1
         if not feats and name != "contours":
             print(f"{name}: no features")
-            bad += 1
-        limit = REGION_BOUND if name == "region" else BOUND
+            file_bad += 1
+        limit = BOUNDS.get(name, BOUND)
         for f in feats:
             rings = f["p"] if kind == "polys" else [f["p"]]
             for ring in rings:
                 for x, z in ring:
                     if abs(x) > limit or abs(z) > limit:
                         print(f"{name}: coordinate ({x}, {z}) outside ±{limit}")
-                        bad += 1
+                        file_bad += 1
                         break
         if name in KINDS:
             for k in sorted({f.get("k") for f in feats} - KINDS[name], key=repr):
                 print(f"{name}: kind {k!r} not one of {sorted(KINDS[name])}")
-                bad += 1
+                file_bad += 1
         if name == "density":
             for q in sorted({f.get("q") for f in feats} - QUANTILES, key=repr):
                 print(f"density: q {q!r} outside 0-4")
-                bad += 1
+                file_bad += 1
         if name == "growth" and any(not f.get("indicative") for f in feats):
             print("growth: every feature must be indicative")
-            bad += 1
+            file_bad += 1
         size = path.stat().st_size / 1e6
-        print(f"ok {name:10s} {len(feats):6d} features {size:5.2f} MB")
+        print(f"{'FAIL' if file_bad else 'ok':4s} {name:10s} {len(feats):6d} features {size:5.2f} MB")
+        bad += file_bad
     total = sum((OUT / f"{n}.json").stat().st_size for n in FILES if (OUT / f"{n}.json").exists()) / 1e6
     print(f"total {total:.2f} MB")
     if total > 8:
@@ -113,6 +119,11 @@ def bake() -> int:
     land = sg.geometry.iloc[0]
     parts = sorted(getattr(land, "geoms", [land]), key=lambda g: -g.area)
     main = parts[0]
+    # Nominatim's Singapore boundary drags in a distant maritime polygon (and
+    # Pedra Branca); both sit close enough to main's edge that an edge-to-edge
+    # distance doesn't exclude them, but their centroids are 60-220 km from
+    # main's centroid (the callout anchor), so measure centroid to centroid.
+    parts = [p for p in parts if p.centroid.distance(main.centroid) < 30_000]
     cx, cy = main.centroid.x, main.centroid.y
     minx, _, maxx, _ = main.bounds
     scale = ISLAND_WIDTH_UNITS / (maxx - minx)

@@ -98,10 +98,9 @@ export const PARTS = [
     material: 'OSM footprints × building:levels, 500 m hex grid', mass: 'Layer V',
     explode: [0, 10, 0], files: ['coast', 'density', 'buildings'],
     spec: 'Floor-area intensity per hexagonal cell. The deepest blue marks the core and the tallest HDB towns; the periphery fades to pale blue.',
-    note: 'Untagged buildings assume four storeys, so the map undercounts towers where OSM lacks level data.',
+    note: 'Untagged buildings assume four storeys, so the map undercounts towers where OSM lacks level data. Building heights are exaggerated ×10 against the map scale; at true scale a 40-storey tower would be invisible.',
     legend: [
-      { swatch: hex(0xdbe9f7), label: 'Low density' },
-      { swatch: hex(0x9ec3e6), label: '' },
+      { swatch: hex(0x9ec3e6), label: 'Low density' },
       { swatch: hex(0x5e96d1), label: 'Medium' },
       { swatch: hex(0x2f66b3), label: '' },
       { swatch: hex(0x123c80), label: 'Highest density' },

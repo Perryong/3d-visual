@@ -11,6 +11,12 @@ import { polyMesh, lineSegments, ribbonMesh, extrudeMesh, plateMesh } from './ge
 
 const Z = { plate: 0, poly: 0.05, poly2: 0.08, poly3: 0.11, line: 0.14, line2: 0.17 };
 
+// Storey height in scene units, and how much L-05 exaggerates it: at true
+// scale a 40-storey tower is 40 * STOREY_UNITS ~= 0.13 units tall against a
+// 40-unit-wide island — invisible, so the extrusion is boosted ×10.
+const STOREY_UNITS = 0.0032;
+const HEIGHT_EXAGGERATION = 10;
+
 function plate(d, color = COLORS.plate) {
   return plateMesh(d.coast, { color, outline: COLORS.outline, y: Z.plate });
 }
@@ -90,7 +96,7 @@ const BUILDERS = {
     // they mostly sit in would need a spatial join; use levels directly.
     g.add(extrudeMesh(d.buildings, {
       y: Z.poly2,
-      heightFn: (f) => (f.v ?? 4) * 0.0032 * 10,
+      heightFn: (f) => (f.v ?? 4) * STOREY_UNITS * HEIGHT_EXAGGERATION,
       colorFn: (f) => COLORS.density[Math.min(4, Math.floor(((f.v ?? 4) - 1) / 8))],
       filter: (f) => (f.v ?? 4) >= 10,
     }));

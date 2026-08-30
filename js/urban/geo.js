@@ -9,13 +9,13 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
-const DATA_DIR = './data/urban/';
+const DATA_DIR = new URL('../../data/urban/', import.meta.url);
 
 export async function loadAll(names) {
   const docs = await Promise.all(
     names.map(async (n) => {
       try {
-        const r = await fetch(`${DATA_DIR}${n}.json`);
+        const r = await fetch(new URL(`${n}.json`, DATA_DIR));
         if (!r.ok) throw new Error(r.statusText);
         return [n, await r.json()];
       } catch (e) {

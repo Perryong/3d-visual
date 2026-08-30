@@ -91,7 +91,9 @@
             <h2>Observations &amp; legend</h2>
             <span class="panel__meta" id="tb-status">—</span>
           </div>
-          <div id="data-panel" class="data"></div>
+          <div id="data-panel" class="data">
+            <p class="data__empty">Loading map layers…</p>
+          </div>
           <div class="panel__actions">
             <button type="button" id="btn-focus" data-needs-selection>Focus</button>
             <button type="button" id="btn-isolate" data-needs-selection>Isolate</button>
@@ -115,10 +117,6 @@
         </div>
 
         <div class="control control--toggles">
-          <label class="switch">
-            <input type="checkbox" id="toggle-blueprint" />
-            <span>Translucent</span>
-          </label>
           <label class="switch">
             <input type="checkbox" id="toggle-callouts" checked />
             <span>Callouts</span>
