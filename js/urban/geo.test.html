@@ -8,7 +8,7 @@
 <pre id="out"></pre>
 <script type="module">
   import * as THREE from 'three';
-  import { polyMesh, lineSegments, ribbonMesh, extrudeMesh } from './geo.js';
+  import { polyMesh, lineSegments, ribbonMesh, extrudeMesh, plateMesh, PLATE_DEPTH } from './geo.js';
 
   const square = { type: 'polys', features: [
     { p: [[[0, 0], [2, 0], [2, 2], [0, 2]]], k: 'a', v: 3 },
@@ -39,6 +39,11 @@
   ex.geometry.computeBoundingBox();
   check('extrude height follows heightFn', Math.abs(ex.geometry.boundingBox.max.y - 3) < 1e-6);
   check('extrude has vertex colours', Boolean(ex.geometry.attributes.color));
+
+  const pl = plateMesh(square, { color: 0xf3ede2, side: 0xd9d0bd, outline: 0, y: 0 });
+  const pb = new THREE.Box3().setFromObject(pl);
+  check('plate is a slab of PLATE_DEPTH', Math.abs(pb.max.y - pb.min.y - PLATE_DEPTH) < 0.03);
+  check('plate cap is flagged', pl.children.some((c) => c.userData.isPlate));
 
   document.getElementById('out').textContent = results.join('\n');
   console.log(results.join('\n'));

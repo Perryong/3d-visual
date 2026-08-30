@@ -140,11 +140,34 @@ export function extrudeMesh(doc, { y = 0, heightFn, colorFn, filter }) {
   return mesh;
 }
 
-export function plateMesh(coastDoc, { color, outline, y = 0 }) {
+export const PLATE_DEPTH = 0.35;
+
+export function plateMesh(coastDoc, { color, side = 0xd9d0bd, outline, y = 0 }) {
   const grp = new THREE.Group();
-  const fill = polyMesh(coastDoc, { color, y });
-  fill.userData.isPlate = true;
-  grp.add(fill);
+  const geos = coastDoc.features.map((f) =>
+    new THREE.ExtrudeGeometry(toShape(f.p), { depth: PLATE_DEPTH, bevelEnabled: false })
+  );
+  // ExtrudeGeometry groups: 0 = caps, 1 = sides. mergeGeometries(geos, true)
+  // does NOT keep that split — three's BufferGeometryUtils assigns
+  // materialIndex = source geometry's index in the array (addGroup(offset,
+  // count, i)), ignoring each geometry's own groups. So merge without groups
+  // and rebuild the cap/side groups ourselves from each source's own groups.
+  const merged = geos.length ? flat(mergeGeometries(geos, false)) : empty();
+  if (geos.length) {
+    let offset = 0;
+    geos.forEach((g) => {
+      g.groups.forEach((gr) => merged.addGroup(offset + gr.start, gr.count, gr.materialIndex));
+      offset += g.attributes.position.count;
+    });
+  }
+  geos.forEach((g) => g.dispose());
+  const cap = new THREE.Mesh(merged, [
+    new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: side }),
+  ]);
+  cap.position.y = y - PLATE_DEPTH; // slab top lands at y
+  cap.userData.isPlate = true;
+  grp.add(cap);
   const ring = { type: 'lines', features: coastDoc.features.map((f) => ({ p: [...f.p[0], f.p[0][0]] })) };
   grp.add(lineSegments(ring, { color: outline, y: y + 0.02 }));
   return grp;
