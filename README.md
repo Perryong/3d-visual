@@ -28,6 +28,43 @@ CDN by the import map in `index.html`.
 To publish it, push to GitHub and turn on Pages for the default branch root.
 The `.nojekyll` file is there so Pages serves the directories as-is.
 
+## Second sheet: Singapore urban analysis board
+
+`urban.html` shows Singapore as seven exploded analytical map layers built
+from OpenStreetMap. Same controls as the tank sheet: the disassembly slider
+spreads the stack, callouts and list rows select a layer, the right panel
+holds observations and the legend.
+
+Geometry is real; the analytical classifications are not authoritative.
+Growth areas are hand-traced boxes, the urban core is a hand-picked box,
+and density assumes four storeys wherever OSM has no `building:levels`.
+
+### Re-baking the data
+
+The bake reads a local BBBike Singapore PBF extract via `pyrosm`, plus a
+Natural Earth 10m land extract for the regional context layer — no Overpass
+calls, since the public mirrors rate-limit this workload. Fetch both once
+(see the docstring in `tools/bake_urban.py` for the exact commands):
+
+```bash
+curl -L -o tools/.cache/singapore.osm.pbf https://download.bbbike.org/osm/bbbike/Singapore/Singapore.osm.pbf
+curl -L -o tools/.cache/ne_10m_land.zip https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip
+```
+
+Then bake and validate:
+
+```bash
+python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/requirements.txt
+tools/.venv/bin/python tools/bake_urban.py          # parses the local extracts, writes data/urban/*.json
+python3 tools/bake_urban.py --check                 # validates the committed outputs
+```
+
+`tools/requirements.txt` covers everything above (osmnx, geopandas, shapely,
+pyrosm). Contours are a separate, optional layer: they need `rasterio` and
+`scikit-image` plus a DEM at `tools/.cache/sg_dem.tif`, none of which the bake
+fetches for you. Without them the bake skips the layer and prints a warning;
+`data/urban/contours.json` is committed empty in this repo.
+
 ## How it fits together
 
 | File | Job |

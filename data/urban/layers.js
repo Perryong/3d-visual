@@ -43,7 +43,7 @@ export const PARTS = [
   {
     id: 'L-01', group: 'layers', name: 'Natural systems', qty: 1,
     material: 'OSM parks, reserves, water · SRTM contours', mass: 'Layer I',
-    explode: [0, 36, 0], files: ['coast', 'water', 'parks', 'contours'],
+    explode: [0, 30, 0], files: ['coast', 'water', 'parks', 'contours'],
     spec: 'The green and blue skeleton the city is built around: the central catchment reserves, the coastal parks, the reservoirs and the canalised rivers that drain them.',
     note: 'Contours are decorative and may be absent from the bake. Park kinds follow OSM tagging, which is uneven outside the major reserves.',
     legend: [
@@ -57,7 +57,7 @@ export const PARTS = [
   {
     id: 'L-02', group: 'layers', name: 'Land use functions', qty: 1,
     material: 'OSM landuse + amenity polygons', mass: 'Layer II',
-    explode: [0, 30, 0], files: ['coast', 'landuse', 'parks'],
+    explode: [0, 25, 0], files: ['coast', 'landuse', 'parks'],
     spec: 'Functional zoning: the housing estates ringing the island, industrial Jurong and Tuas mapped as mixed, institutional campuses, and the CBD / Marina Bay core in deep orange.',
     note: 'The core box is hand-picked, not an official boundary. OSM landuse coverage is partial for commercial areas.',
     legend: [
@@ -72,7 +72,7 @@ export const PARTS = [
   {
     id: 'L-03', group: 'layers', name: 'Transportation & connectivity', qty: 1,
     material: 'OSM drive network · MRT / LRT ways', mass: 'Layer III',
-    explode: [0, 24, 0], files: ['coast', 'roads', 'rail'],
+    explode: [0, 20, 0], files: ['coast', 'roads', 'rail'],
     spec: 'Expressways stitch the island east–west and north–south; the MRT network radiates from the core and loops through the new towns.',
     note: 'Primary = motorway, trunk and primary tags. Secondary = secondary and tertiary. Local streets are omitted for legibility.',
     legend: [
@@ -84,7 +84,7 @@ export const PARTS = [
   {
     id: 'L-04', group: 'layers', name: 'Development evolution', qty: 1,
     material: 'Hand-traced from URA Master Plan regions', mass: 'Layer IV',
-    explode: [0, 18, 0], files: ['coast', 'growth'],
+    explode: [0, 15, 0], files: ['coast', 'growth'],
     spec: 'Where the city is growing: recent completions in the north-east, planned towns in the west, and the renewal corridor along the southern waterfront.',
     note: 'INDICATIVE. Outlines are approximate boxes traced by hand for this board, not planning boundaries.',
     legend: [
@@ -96,7 +96,7 @@ export const PARTS = [
   {
     id: 'L-05', group: 'layers', name: 'Building height & density', qty: 1,
     material: 'OSM footprints × building:levels, 500 m hex grid', mass: 'Layer V',
-    explode: [0, 12, 0], files: ['coast', 'density', 'buildings'],
+    explode: [0, 10, 0], files: ['coast', 'density', 'buildings'],
     spec: 'Floor-area intensity per hexagonal cell. The deepest blue marks the core and the tallest HDB towns; the periphery fades to pale blue.',
     note: 'Untagged buildings assume four storeys, so the map undercounts towers where OSM lacks level data.',
     legend: [
@@ -110,7 +110,7 @@ export const PARTS = [
   {
     id: 'L-06', group: 'layers', name: 'Urban fabric', qty: 1,
     material: 'OSM building footprints', mass: 'Layer VI',
-    explode: [0, 6, 0], files: ['coast', 'buildings'],
+    explode: [0, 5, 0], files: ['coast', 'buildings'],
     spec: 'Figure-ground: fine-grained shophouse blocks in the centre against the coarse slab-and-tower grain of the new towns and the industrial mega-blocks of the west.',
     note: 'Footprints under 500 m² are dropped by the bake to keep the file small.',
     legend: [{ swatch: hex(0x111111), label: 'Building footprint' }],
