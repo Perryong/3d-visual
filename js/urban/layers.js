@@ -129,7 +129,10 @@ export function buildLayers(docs) {
     grp.userData.explode = new THREE.Vector3(...p.explode);
     grp.userData.paired = false;
     grp.traverse((o) => {
-      if (o.isMesh || o.isLineSegments) o.userData.partId = p.id;
+      if (o.isMesh || o.isLineSegments) {
+        o.userData.partId = p.id;
+        o.userData.noHighlight = !o.userData.isPlate;
+      }
     });
     root.add(grp);
     groups.set(p.id, grp);

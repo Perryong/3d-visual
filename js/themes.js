@@ -14,3 +14,16 @@ export const TANK_THEME = {
   maxPolarAngle: Math.PI * 0.52,
   select: { color: 0xf2a33c, emissive: 0x6b3d05 },
 };
+
+export const URBAN_THEME = {
+  clear: 0xffffff,
+  fog: null,
+  grid: null,
+  edge: null,
+  camera: [0, 44, 52],
+  target: [0, 18, 0],
+  minDistance: 30,
+  maxDistance: 180,
+  maxPolarAngle: Math.PI * 0.48,
+  select: { color: 0xd9480f, emissive: 0x000000 },
+};

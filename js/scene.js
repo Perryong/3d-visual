@@ -89,6 +89,12 @@ export function createScene(canvas, { build, theme }) {
     roughness: 0.5,
     metalness: 0.1,
   });
+  const flatHighlight = new THREE.MeshBasicMaterial({
+    color: theme.select.color,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.DoubleSide,
+  });
   const originalMats = new Map();
 
   function setSelected(partId) {
@@ -101,9 +107,9 @@ export function createScene(canvas, { build, theme }) {
     const grp = groups.get(partId);
     if (!grp) return;
     grp.traverse((o) => {
-      if (o.isMesh) {
+      if (o.isMesh && !o.userData.noHighlight) {
         originalMats.set(o, o.material);
-        o.material = highlightMat;
+        o.material = o.material.isMeshStandardMaterial ? highlightMat : flatHighlight;
       }
     });
   }

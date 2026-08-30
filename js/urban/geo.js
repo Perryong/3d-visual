@@ -142,7 +142,9 @@ export function extrudeMesh(doc, { y = 0, heightFn, colorFn, filter }) {
 
 export function plateMesh(coastDoc, { color, outline, y = 0 }) {
   const grp = new THREE.Group();
-  grp.add(polyMesh(coastDoc, { color, y }));
+  const fill = polyMesh(coastDoc, { color, y });
+  fill.userData.isPlate = true;
+  grp.add(fill);
   const ring = { type: 'lines', features: coastDoc.features.map((f) => ({ p: [...f.p[0], f.p[0][0]] })) };
   grp.add(lineSegments(ring, { color: outline, y: y + 0.02 }));
   return grp;

@@ -1,0 +1,111 @@
+/* Singapore urban analysis board — paper theme over the shared sheet. */
+@import url('./sheet.css');
+
+:root {
+  --ink: #ffffff;
+  --plate: #faf8f4;
+  --plate-2: #faf8f4;
+  --rule: #d9d4ca;
+  --rule-soft: #e8e4dc;
+  --line: #1a1a1a;
+  --text: #1a1a1a;
+  --dim: #6d6a63;
+  --dimmer: #9c988f;
+  --amber: #d9480f;
+}
+
+body {
+  background: var(--ink);
+  -webkit-font-smoothing: auto;
+}
+
+/* Subtle paper grain, once, behind everything. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.sheet__head { background: var(--plate); }
+.callout { background: rgba(255, 255, 255, 0.92); border-color: var(--rule); }
+.leader { stroke: var(--dim); }
+.leader.is-selected { stroke: var(--amber); }
+.hint { color: var(--dimmer); }
+
+.north {
+  position: absolute;
+  right: 20px;
+  bottom: 44px;
+  width: 28px;
+  height: 42px;
+}
+
+.bom__legend { display: inline-flex; gap: 3px; margin-left: 6px; }
+.bom__legend i,
+.legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--rule);
+}
+.legend { list-style: none; margin: 4px 0 0; padding: 0; }
+.legend li { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+.data__block h5 { margin: 10px 0 2px; font-size: 11px; color: var(--dim); font-weight: 500; }
+
+@media (prefers-color-scheme: dark) {
+  /* The board is a paper artefact; it stays light in every scheme. */
+}
+
+/* ── Remaining hardcoded colours in sheet.css ─────────────────────────────
+   sheet.css bakes a few literal dark-theme hex/rgba values instead of using
+   the custom properties above (see grep -n '#0\|#1\|rgba' css/sheet.css and
+   the near-white #e8f4ff title colour that grep misses). Override the
+   selectors here rather than editing sheet.css, which the tank sheet also
+   uses. */
+.ident__designation,
+.data__title {
+  color: var(--text);
+}
+
+.field {
+  background: var(--ink);
+}
+
+.bom__btn:hover {
+  background: var(--rule-soft);
+}
+
+.bom__btn.is-active {
+  background: rgba(217, 72, 15, 0.08);
+}
+
+.callout:hover {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.callout.is-selected {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.data__block--note p {
+  border-left-color: rgba(217, 72, 15, 0.35);
+}
+
+.panel__actions button:hover:not(:disabled) {
+  background: var(--rule-soft);
+}
+
+.panel__actions button:disabled {
+  color: var(--dimmer);
+}
+
+.panel__actions button.is-on {
+  background: rgba(217, 72, 15, 0.1);
+}
+
+.control--presets button.is-on {
+  background: var(--rule-soft);
+}

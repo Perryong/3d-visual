@@ -30,6 +30,8 @@ export function createUI({ onSelect, data }) {
           <span class="bom__id">${p.id}</span>
           <span class="bom__name">${p.name}</span>
           <span class="bom__qty">${p.qty}</span>
+          ${p.legend ? `<span class="bom__legend">${p.legend.slice(0, 3).map((l) =>
+            `<i style="background:${l.swatch}" title="${l.label}"></i>`).join('')}</span>` : ''}
         </button>`;
       list.appendChild(row);
     });
@@ -51,7 +53,21 @@ export function createUI({ onSelect, data }) {
   }
 
   // ---- Data panel -------------------------------------------------------
-  const EMPTY = `
+  const legendList = (legend) =>
+    `<ul class="legend">${legend.map((l) =>
+      `<li><i style="background:${l.swatch}"></i><span>${l.label}</span></li>`).join('')}</ul>`;
+
+  const EMPTY = data.OBSERVATIONS
+    ? `
+      <section class="data__block">
+        <h4>Key observations</h4>
+        ${data.OBSERVATIONS.map((o) => `<p><strong>${o.title}.</strong> ${o.text}</p>`).join('')}
+      </section>
+      <section class="data__block">
+        <h4>Legend — all layers</h4>
+        ${PARTS.map((p) => `<h5>${p.id} ${p.name}</h5>${legendList(p.legend)}`).join('')}
+      </section>`
+    : `
     <p class="data__empty">
       Nothing selected. Pick a row from the parts list, click a component in
       the 3D field, or drag the disassembly slider to take the vehicle apart.
@@ -70,15 +86,16 @@ export function createUI({ onSelect, data }) {
       </header>
       <dl class="data__grid">
         <dt>Quantity</dt><dd>${p.qty}</dd>
-        <dt>Construction</dt><dd>${p.material}</dd>
-        <dt>Mass</dt><dd>${p.mass}</dd>
+        <dt>${p.legend ? 'Source' : 'Construction'}</dt><dd>${p.material}</dd>
+        <dt>${p.legend ? 'Position' : 'Mass'}</dt><dd>${p.mass}</dd>
       </dl>
       <section class="data__block">
-        <h4>Function</h4>
+        <h4>${p.legend ? 'Analysis' : 'Function'}</h4>
         <p>${p.spec}</p>
       </section>
+      ${p.legend ? `<section class="data__block"><h4>Legend</h4>${legendList(p.legend)}</section>` : ''}
       <section class="data__block data__block--note">
-        <h4>Maintenance note</h4>
+        <h4>${p.legend ? 'Data note' : 'Maintenance note'}</h4>
         <p>${p.note}</p>
       </section>`;
   }
