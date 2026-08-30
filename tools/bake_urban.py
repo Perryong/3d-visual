@@ -37,6 +37,15 @@ FILES = {
     "density": "polys", "growth": "polys", "region": "lines",
 }
 
+# Layers whose "k" is an enumeration the renderer switches on.
+KINDS = {
+    "parks": {"forest", "park", "open"},
+    "landuse": {"residential", "commercial", "mixed", "institutional", "core"},
+    "roads": {"primary", "secondary"},
+    "growth": {"recent", "future", "renewal"},
+}
+QUANTILES = {0, 1, 2, 3, 4}
+
 
 def check() -> int:
     bad = 0
@@ -63,6 +72,14 @@ def check() -> int:
                         print(f"{name}: coordinate ({x}, {z}) outside ±{limit}")
                         bad += 1
                         break
+        if name in KINDS:
+            for k in sorted({f.get("k") for f in feats} - KINDS[name], key=repr):
+                print(f"{name}: kind {k!r} not one of {sorted(KINDS[name])}")
+                bad += 1
+        if name == "density":
+            for q in sorted({f.get("q") for f in feats} - QUANTILES, key=repr):
+                print(f"density: q {q!r} outside 0-4")
+                bad += 1
         if name == "growth" and any(not f.get("indicative") for f in feats):
             print("growth: every feature must be indicative")
             bad += 1
@@ -170,14 +187,19 @@ def bake() -> int:
 
     osm = OSM(str(CACHE / "singapore.osm.pbf"))
 
-    def features(custom_filter, geom_types):
-        """Tagged features from the local PBF, projected and positionally indexed."""
-        gdf = osm.get_data_by_custom_criteria(custom_filter=custom_filter, filter_type="keep")
+    def prep(gdf, geom_types):
+        """Any pyrosm result -> non-null wanted geometry, projected, 0..n indexed.
+        pyrosm returns None when a query matches nothing."""
         if gdf is None or gdf.empty:
             return gpd.GeoDataFrame({"geometry": []}, crs=CRS)
         gdf = gdf[gdf.geometry.notna()]
         gdf = gdf[gdf.geometry.geom_type.isin(geom_types)]
         return gdf.to_crs(CRS).reset_index(drop=True)
+
+    def features(custom_filter, geom_types):
+        """Tagged features from the local PBF."""
+        return prep(osm.get_data_by_custom_criteria(custom_filter=custom_filter,
+                                                    filter_type="keep"), geom_types)
 
     def col(gdf, name):
         """Positional list for a tag pyrosm may expose as a column or only inside
@@ -242,7 +264,7 @@ def bake() -> int:
     write("landuse", "polys", lu_feats)
 
     # ---- Roads ------------------------------------------------------------
-    edges = osm.get_network(network_type="driving").to_crs(CRS).reset_index(drop=True)
+    edges = prep(osm.get_network(network_type="driving"), LINES)
     def road_kind(h):
         h = h[0] if isinstance(h, list) else h
         if h in ("motorway", "trunk", "primary", "motorway_link", "trunk_link"):
@@ -250,7 +272,7 @@ def bake() -> int:
         if h in ("secondary", "tertiary"):
             return "secondary"
         return None
-    edges["k"] = edges["highway"].map(road_kind)
+    edges["k"] = [road_kind(h) for h in col(edges, "highway")]
     edges = edges[edges["k"].notna()]
     road_geoms, road_kinds = [], []
     for k, grp in edges.groupby("k"):
@@ -273,9 +295,7 @@ def bake() -> int:
     # ponytail: whole-island footprints are the size ceiling. min_area is the
     # knob that keeps the bundle under 8 MB (150 m2 -> 13 MB, 500 m2 -> 6.2 MB);
     # for finer footprints, split buildings.json by tile and load on demand.
-    b = osm.get_buildings()
-    b = b[b.geometry.notna()]
-    b = b[b.geometry.geom_type.isin(POLYS)].to_crs(CRS).reset_index(drop=True)
+    b = prep(osm.get_buildings(), POLYS)
     def levels(v):
         try:
             return max(1, int(float(str(v).split(";")[0])))
