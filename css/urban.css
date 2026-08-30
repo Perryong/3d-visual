@@ -49,7 +49,7 @@ body::before {
 
 /* Offscreen render source only — never shown; each frame's viewport rect is
    copied into its .thumb's own <canvas>, which is what the circle clips. */
-#thumb-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; opacity: 0; pointer-events: none; z-index: -1; }
+#thumb-canvas { position: fixed; inset: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none; z-index: -1; }
 .obs { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; margin: 0 0 18px; }
 .thumb { width: 96px; height: 96px; border-radius: 50%; background: var(--plate); border: 1px solid var(--rule); overflow: hidden; }
 .thumb canvas { width: 100%; height: 100%; display: block; }
@@ -165,13 +165,15 @@ body.is-poster .data__block h4 { font: 600 14px/1.2 var(--display); letter-spaci
 .scale__ticks b:first-child { transform: none; }
 .scale__ticks b:last-child { transform: translateX(15%); }
 .compass { position: absolute; right: 24px; bottom: 16px; width: 44px; height: 44px; }
-body:not(.is-poster) .scale { display: none; }
+/* Sheet mode keeps the same scale bar, smaller and where the tank sheet's sits. */
+body:not(.is-poster) .scale { left: 50%; bottom: 42px; width: 150px; transform: translateX(-50%); font-size: 9px; color: var(--dim); }
 body:not(.is-poster) .compass { width: 30px; height: 30px; }
 body.is-poster .hint { display: none; }
 body.is-poster .sheet__foot { border: none; justify-content: flex-end; }
 
+/* @page is document-wide, so the poster's paper size is injected by
+   js/urban/app.js only when the poster view is on. */
 @media print {
-  @page { size: A2 portrait; margin: 12mm; }
   body.is-poster .sheet__foot { display: none; }
   body.is-poster .sheet { margin: 0; max-width: none; }
 }

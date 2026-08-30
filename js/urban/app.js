@@ -20,6 +20,11 @@ if (poster) {
   link.href = 'urban.html';
   link.textContent = 'Sheet';
   document.getElementById('btn-png').hidden = false;
+  // @page can't be scoped by selector; only add it on the poster view.
+  document.head.insertAdjacentHTML(
+    'beforeend',
+    '<style media="print">@page { size: A2 portrait; margin: 12mm }</style>'
+  );
 }
 const theme = poster ? URBAN_THEME : { ...URBAN_THEME, poster: null };
 bootSheet({ data, build: () => buildLayers(docs), theme });

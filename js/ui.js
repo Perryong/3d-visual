@@ -57,7 +57,10 @@ export function createUI({ onSelect, data }) {
       btn.classList.toggle('is-active', btn.dataset.partId === partId);
     });
     const active = list.querySelector('.bom__btn.is-active');
-    if (active) active.scrollIntoView({ block: 'nearest' });
+    // The poster is one long page; scrolling the row into view jerks it.
+    if (active && !document.body.classList.contains('is-poster')) {
+      active.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   // ---- Data panel -------------------------------------------------------
@@ -67,7 +70,7 @@ export function createUI({ onSelect, data }) {
         <h4>Key observations</h4>
         ${data.OBSERVATIONS.map((o, i) => `
           <div class="obs">
-            <div class="thumb" data-layer="${o.layer ?? ''}" data-area="${o.area ?? 'island'}"><canvas></canvas></div>
+            <div class="thumb" data-layer="${o.layer ?? ''}" data-area="${o.area ?? 'island'}"><canvas aria-hidden="true"></canvas></div>
             <p><strong>${i + 1} · ${o.title}.</strong> ${o.text}</p>
           </div>`).join('')}
       </section>

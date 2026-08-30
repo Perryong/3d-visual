@@ -46,6 +46,10 @@ export function createCallouts(layer, svg, parts, api) {
 
   let enabled = true;
   let selectedId = null;
+  // Poster mode is a still image: the guides only move when the fit or the
+  // selection does, so recompute them on demand rather than every frame.
+  let dirty = true;
+  const markDirty = () => { dirty = true; };
 
   function setEnabled(on) {
     enabled = on;
@@ -69,7 +73,11 @@ export function createCallouts(layer, svg, parts, api) {
     const w = svg.clientWidth;
     const h = svg.clientHeight;
     if (!w || !h) return;
-    if (api.poster) return updateGuides(w, h);
+    if (api.poster) {
+      if (!dirty) return;
+      dirty = false;
+      return updateGuides(w, h);
+    }
 
     const left = [];
     const right = [];
@@ -181,5 +189,5 @@ export function createCallouts(layer, svg, parts, api) {
     if (btn) api.onCalloutClick?.(btn.dataset.partId);
   });
 
-  return { update, setEnabled, setSelected };
+  return { update, setEnabled, setSelected, markDirty };
 }

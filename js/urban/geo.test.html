@@ -45,6 +45,14 @@
   check('plate is a slab of PLATE_DEPTH', Math.abs(pb.max.y - pb.min.y - PLATE_DEPTH) < 0.03);
   check('plate cap is flagged', pl.children.some((c) => c.userData.isPlate));
 
+  const capGeo = pl.children.find((c) => c.userData.isPlate).geometry;
+  const idx = new Set(capGeo.groups.map((g) => g.materialIndex));
+  const covered = capGeo.groups.reduce((n, g) => n + g.count, 0);
+  check(
+    'plate cap keeps cap/side groups covering every vertex',
+    idx.has(0) && idx.has(1) && covered === capGeo.attributes.position.count
+  );
+
   document.getElementById('out').textContent = results.join('\n');
   console.log(results.join('\n'));
 </script>

@@ -15,9 +15,19 @@ export function bootSheet({ data, build, theme }) {
   const api = createScene(canvas, { build, theme });
 
   if (api.poster) {
-    const step = theme.poster.explodeStep;
-    PARTS.forEach((p, i) => {
-      api.groups.get(p.id)?.userData.explode.set(0, (PARTS.length - 1 - i) * step, 0);
+    // The step comes from the frustum (scene.js resize), so the stack always
+    // fills the poster column; re-explode whenever the fit changes.
+    api.onPosterFit = (step) => {
+      PARTS.forEach((p, i) => {
+        api.groups.get(p.id)?.userData.explode.set(0, (PARTS.length - 1 - i) * step, 0);
+      });
+      api.setDisassembly(1);
+      markDirty();
+    };
+    // L-07's 240-unit context quad is sheet-mode scenery; on the poster it
+    // would flood the frame grey.
+    api.root.traverse((o) => {
+      if (o.userData.isRegionBg) o.visible = false;
     });
   }
 
@@ -37,6 +47,7 @@ export function bootSheet({ data, build, theme }) {
   if (api.poster && data.OBSERVATIONS) {
     import('./urban/thumbs.js').then(({ createThumbs }) => {
       thumbs = createThumbs(api, document.getElementById('thumb-canvas'));
+      markDirty();
     });
   }
 
@@ -44,10 +55,20 @@ export function bootSheet({ data, build, theme }) {
     selected = partId === selected ? null : partId;
     api.setSelected(selected);
     callouts.setSelected(selected);
-    ui.setActiveRow(selected);
-    if (selected) ui.showPart(selected);
+    // The poster's data panel is the observations column, not a part sheet;
+    // set the row highlight after, since ui.clear() drops it.
+    if (selected && !api.poster) ui.showPart(selected);
     else ui.clear();
+    ui.setActiveRow(selected);
+    markDirty();
     syncActionButtons();
+  }
+
+  // Poster mode renders a static scene; only redraw the thumbnails and the
+  // guides when something has actually moved.
+  function markDirty() {
+    thumbs?.markDirty();
+    callouts.markDirty();
   }
 
   function syncActionButtons() {
@@ -191,7 +212,8 @@ export function bootSheet({ data, build, theme }) {
     }
 
     api.stepTween(dt);
-    api.controls.update();
+    // OrbitControls.update() clamps the ortho camera back to maxDistance.
+    if (!api.poster) api.controls.update();
     api.renderer.render(api.scene, api.camera);
     callouts.update();
     thumbs?.update();
@@ -209,7 +231,10 @@ export function bootSheet({ data, build, theme }) {
     svg.setAttribute('height', canvas.clientHeight);
   }
 
-  window.addEventListener('resize', resizeAll);
+  window.addEventListener('resize', () => {
+    resizeAll();
+    markDirty();
+  });
   // Poster mode's field height comes from the grid row (stretched to match
   // the side columns), which can settle a frame or two after first paint
   // (web fonts, image decode) — a plain resize listener won't see that.

@@ -116,6 +116,7 @@ const BUILDERS = {
       new THREE.MeshBasicMaterial({ color: COLORS.plateRegion, side: THREE.DoubleSide })
     );
     bg.rotation.x = -Math.PI / 2;
+    bg.userData.isRegionBg = true; // sheet-mode context only; the poster hides it
     bg.position.y = Z.plate - 0.02;
     g.add(bg);
     g.add(lineSegments(stripRegionFrame(d.region), { color: COLORS.region.coast, y: Z.line }));

@@ -17,16 +17,27 @@ export function createThumbs(api, canvas) {
   const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 500);
   cam.up.set(0, 0, -1); // north up on the thumbnail
 
-  // ponytail: re-renders every thumb every frame; throttle to on-scroll/resize if it ever matters.
+  // The scene is static, so only redraw when something that changes what a
+  // thumbnail shows has happened: scroll (which moves the viewport rects),
+  // resize, a re-fit, or a selection change (which rebuilds the canvases).
+  let dirty = true;
+  const markDirty = () => { dirty = true; };
+  window.addEventListener('scroll', markDirty, { passive: true });
+  window.addEventListener('resize', markDirty);
+
   function update() {
+    if (!dirty) return;
     const w = window.innerWidth;
     const h = window.innerHeight;
     const dpr = renderer.getPixelRatio();
-    if (canvas.width !== Math.floor(w * dpr)) renderer.setSize(w, h, false);
+    if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+      renderer.setSize(w, h, false);
+    }
     renderer.setClearColor(0x000000, 0);
     renderer.clear();
     const thumbs = document.querySelectorAll('.thumb[data-layer]');
-    if (!thumbs.length) return;
+    if (!thumbs.length) return; // panel not built yet — stay dirty and retry
+    dirty = false;
     const saved = new Map();
     api.groups.forEach((g, id) => saved.set(id, g.visible));
     thumbs.forEach((el) => {
@@ -61,5 +72,5 @@ export function createThumbs(api, canvas) {
     });
     saved.forEach((v, id) => { api.groups.get(id).visible = v; });
   }
-  return { update };
+  return { update, markDirty };
 }

@@ -24,17 +24,13 @@ export function createScene(canvas, { build, theme }) {
     ? new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 600)
     : new THREE.PerspectiveCamera(34, 1, 0.1, 400);
   if (poster) {
-    const az = THREE.MathUtils.degToRad(poster.azimuth);
-    const el = THREE.MathUtils.degToRad(poster.elevation);
-    const stackH = 6 * poster.explodeStep;
-    const centre = new THREE.Vector3(0, stackH / 2, 0);
-    camera.position.set(
-      centre.x + 200 * Math.cos(el) * Math.sin(az),
-      centre.y + 200 * Math.sin(el),
-      centre.z + 200 * Math.cos(el) * Math.cos(az)
-    );
-    camera.lookAt(centre);
-    camera.userData.halfH = ((stackH + 30) / 2) * poster.fit;
+    // The poster frame is width-bound, so resize() derives the frustum, the
+    // explode step and the camera placement together; keep the viewing ray
+    // and the (moving) stack centre here for it to work from.
+    camera.userData.az = THREE.MathUtils.degToRad(poster.azimuth);
+    camera.userData.el = THREE.MathUtils.degToRad(poster.elevation);
+    camera.userData.centre = new THREE.Vector3();
+    camera.userData.halfH = 30 * poster.fit; // floor: one plate, if ever taller than wide
     camera.userData.halfW = 26 * poster.fit;
   } else {
     camera.position.set(...theme.camera);
@@ -46,7 +42,7 @@ export function createScene(canvas, { build, theme }) {
   controls.minDistance = theme.minDistance;
   controls.maxDistance = theme.maxDistance;
   controls.maxPolarAngle = theme.maxPolarAngle;
-  controls.target.set(...(poster ? [0, 3 * poster.explodeStep, 0] : theme.target));
+  if (!poster) controls.target.set(...theme.target);
   controls.enabled = !poster;
 
   // ---- Lighting ---------------------------------------------------------
@@ -224,16 +220,33 @@ export function createScene(canvas, { build, theme }) {
     renderer.setSize(w, h, false);
     if (camera.isOrthographicCamera) {
       const aspect = w / h;
-      const hh = Math.max(camera.userData.halfH, camera.userData.halfW / aspect);
+      const { az, el, centre, halfH, halfW } = camera.userData;
+      const hh = Math.max(halfH, halfW / aspect);
+      // Fit the stack to the frustum rather than the other way round: one
+      // plate's footprint projects to plateH, each explode step of world Y
+      // projects to step * cos(el), and the six gaps get whatever is left of
+      // 82 % of the frame.
+      const plateH = (40 * Math.sin(az) + 26 * Math.cos(az)) * Math.sin(el);
+      const step = THREE.MathUtils.clamp((2 * hh * 0.82 - plateH) / (6 * Math.cos(el)), 4, 40);
+      centre.set(0, (6 * step) / 2, 0);
+      camera.position.set(
+        centre.x + 200 * Math.cos(el) * Math.sin(az),
+        centre.y + 200 * Math.sin(el),
+        centre.z + 200 * Math.cos(el) * Math.cos(az)
+      );
+      camera.lookAt(centre);
+      controls.target.copy(centre);
       camera.top = hh; camera.bottom = -hh;
       camera.right = hh * aspect; camera.left = -camera.right;
-    } else {
-      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      api.onPosterFit?.(step);
+      return;
     }
+    camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
 
-  return {
+  const api = {
     THREE,
     scene,
     camera,
@@ -255,4 +268,5 @@ export function createScene(canvas, { build, theme }) {
       return blueprint;
     },
   };
+  return api;
 }
