@@ -131,6 +131,15 @@ export function bootSheet({ data, build, theme }) {
     syncActionButtons();
   });
 
+  document.getElementById('btn-png')?.addEventListener('click', () => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const a = document.createElement('a');
+      a.download = 'singapore-urban-analysis.png';
+      a.href = api.renderer.domElement.toDataURL('image/png');
+      a.click();
+    }));
+  });
+
   // ---- Picking ------------------------------------------------------------
   let pointerDown = null;
   canvas.addEventListener('pointerdown', (e) => {

@@ -69,14 +69,15 @@
           <svg id="leader-layer" class="leaders" aria-hidden="true"></svg>
           <div id="callout-layer" class="callouts"></div>
 
-          <div class="scalebar" aria-hidden="true">
-            <span class="scalebar__rule"></span>
-            <span class="scalebar__label">5 km</span>
+          <div class="scale" aria-label="Scale bar, 0 to 25 kilometres">
+            <span class="scale__rule"><i></i><i></i><i></i><i></i><i></i></span>
+            <span class="scale__ticks"><b>0</b><b>5</b><b>10</b><b>15</b><b>20</b><b>25 km</b></span>
           </div>
-
-          <svg class="north" viewBox="0 0 40 60" aria-label="North" role="img">
-            <polygon points="20,4 30,40 20,32 10,40" fill="#1a1a1a" />
-            <text x="20" y="56" text-anchor="middle" font-size="12" font-family="inherit" fill="#1a1a1a">N</text>
+          <svg class="compass" viewBox="0 0 60 60" role="img" aria-label="North">
+            <circle cx="30" cy="30" r="26" fill="none" stroke="#1a1a1a" stroke-width="1.2" />
+            <polygon points="30,6 36,30 30,26 24,30" fill="#1a1a1a" />
+            <polygon points="30,54 36,30 30,34 24,30" fill="none" stroke="#1a1a1a" stroke-width="1" />
+            <text x="30" y="17" text-anchor="middle" font-size="9" fill="#ffffff">N</text>
           </svg>
 
           <p class="hint">
@@ -125,6 +126,8 @@
             <input type="checkbox" id="toggle-rotate" />
             <span>Auto-rotate</span>
           </label>
+          <a id="view-link" class="reset" href="?view=poster">Poster</a>
+          <button type="button" id="btn-png" class="reset" hidden>Save PNG</button>
           <button type="button" id="btn-reset" class="reset">Reset view</button>
         </div>
       </footer>

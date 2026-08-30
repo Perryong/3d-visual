@@ -15,5 +15,11 @@ data.PARTS.forEach((p) => {
 });
 const poster = new URLSearchParams(location.search).get('view') === 'poster';
 document.body.classList.toggle('is-poster', poster);
+const link = document.getElementById('view-link');
+if (poster) {
+  link.href = 'urban.html';
+  link.textContent = 'Sheet';
+  document.getElementById('btn-png').hidden = false;
+}
 const theme = poster ? URBAN_THEME : { ...URBAN_THEME, poster: null };
 bootSheet({ data, build: () => buildLayers(docs), theme });

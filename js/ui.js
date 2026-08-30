@@ -13,6 +13,10 @@ export function createUI({ onSelect, data }) {
   const count = document.getElementById('bom-count');
 
   // ---- Parts list -------------------------------------------------------
+  const legendList = (legend) =>
+    `<ul class="legend">${legend.map((l) =>
+      `<li><i style="background:${l.swatch}" aria-hidden="true"></i><span>${l.label}</span></li>`).join('')}</ul>`;
+
   GROUPS.forEach((group) => {
     const members = PARTS.filter((p) => p.group === group.id);
     if (!members.length) return;
@@ -25,13 +29,17 @@ export function createUI({ onSelect, data }) {
     members.forEach((p) => {
       const row = document.createElement('li');
       row.className = 'bom__row';
+      const rich = Boolean(data.OBSERVATIONS);
+      const num = rich ? `<span class="module__num" style="color:${p.legend?.[0]?.swatch ?? 'inherit'}">${String(p.id).replace(/\D/g, '').replace(/^0/, '')}</span>` : '';
       row.innerHTML = `
         <button type="button" class="bom__btn" data-part-id="${p.id}">
+          ${num}
           <span class="bom__id">${p.id}</span>
           <span class="bom__name">${p.name}</span>
           <span class="bom__qty">${p.qty}</span>
           ${p.legend ? `<span class="bom__legend">${p.legend.slice(0, 3).map((l) =>
             `<i style="background:${l.swatch}" title="${l.label}" aria-hidden="true"></i>`).join('')}</span>` : ''}
+          ${rich ? `<span class="module__spec">${p.spec}</span>${legendList(p.legend)}` : ''}
         </button>`;
       list.appendChild(row);
     });
@@ -53,10 +61,6 @@ export function createUI({ onSelect, data }) {
   }
 
   // ---- Data panel -------------------------------------------------------
-  const legendList = (legend) =>
-    `<ul class="legend">${legend.map((l) =>
-      `<li><i style="background:${l.swatch}" aria-hidden="true"></i><span>${l.label}</span></li>`).join('')}</ul>`;
-
   const EMPTY = data.OBSERVATIONS
     ? `
       <section class="data__block">
