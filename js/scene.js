@@ -35,6 +35,7 @@ export function createScene(canvas, { build, theme }) {
     );
     camera.lookAt(centre);
     camera.userData.halfH = ((stackH + 30) / 2) * poster.fit;
+    camera.userData.halfW = 26 * poster.fit;
   } else {
     camera.position.set(...theme.camera);
   }
@@ -222,9 +223,10 @@ export function createScene(canvas, { build, theme }) {
     if (w === 0 || h === 0) return;
     renderer.setSize(w, h, false);
     if (camera.isOrthographicCamera) {
-      const hh = camera.userData.halfH;
+      const aspect = w / h;
+      const hh = Math.max(camera.userData.halfH, camera.userData.halfW / aspect);
       camera.top = hh; camera.bottom = -hh;
-      camera.right = hh * (w / h); camera.left = -camera.right;
+      camera.right = hh * aspect; camera.left = -camera.right;
     } else {
       camera.aspect = w / h;
     }

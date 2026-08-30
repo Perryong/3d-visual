@@ -202,6 +202,10 @@ export function bootSheet({ data, build, theme }) {
   }
 
   window.addEventListener('resize', resizeAll);
+  // Poster mode's field height comes from the grid row (stretched to match
+  // the side columns), which can settle a frame or two after first paint
+  // (web fonts, image decode) — a plain resize listener won't see that.
+  if (api.poster) new ResizeObserver(resizeAll).observe(document.querySelector('.field'));
   resizeAll();
   setDisassembly(api.poster ? 100 : 0, { updateSlider: true });
   if (api.poster) slider.disabled = true;

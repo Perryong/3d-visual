@@ -124,7 +124,7 @@ body.is-poster .titleblock, body.is-poster .mobile-tabs { display: none; }
 body.is-poster .sheet__body { grid-template-columns: 300px minmax(460px, 1fr) 320px; gap: 24px; padding: 0 32px; }
 body.is-poster .panel { border: none; background: none; overflow: visible; }
 body.is-poster .panel__head { display: none; }
-body.is-poster .field { width: 100%; aspect-ratio: 1 / 2.1; min-height: 1200px; background: none; }
+body.is-poster .field { width: 100%; height: auto; min-height: 1200px; align-self: stretch; background: none; }
 body.is-poster #field { background: transparent; }
 
 /* modules (left) */
@@ -147,7 +147,6 @@ body.is-poster .bom__btn .legend li { font-size: 11px; }
 /* observations (right) */
 body.is-poster .data { padding: 0; }
 body.is-poster .data__block h4 { font: 600 14px/1.2 var(--display); letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
-body.is-poster .panel__actions { display: none; }
 
 /* bottom strip */
 .scale { position: absolute; left: 24px; bottom: 20px; width: 220px; font-size: 10px; color: var(--text); }
