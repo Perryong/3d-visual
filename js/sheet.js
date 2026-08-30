@@ -104,10 +104,12 @@ export function bootSheet({ data, build, theme }) {
 
   // ---- Action buttons -----------------------------------------------------
   document.getElementById('btn-focus').addEventListener('click', () => {
+    if (api.poster) return;
     if (selected) api.focusOn(selected);
   });
 
   document.getElementById('btn-isolate').addEventListener('click', () => {
+    if (api.poster) return;
     isolated = isolated ? null : selected;
     api.setIsolated(isolated);
     syncActionButtons();
@@ -121,6 +123,7 @@ export function bootSheet({ data, build, theme }) {
   });
 
   document.getElementById('btn-reset').addEventListener('click', () => {
+    if (api.poster) return;
     api.resetView();
     isolated = null;
     api.setIsolated(null);
@@ -138,6 +141,7 @@ export function bootSheet({ data, build, theme }) {
     const moved = Math.hypot(e.clientX - pointerDown.x, e.clientY - pointerDown.y);
     pointerDown = null;
     if (moved > 5) return; // that was a drag, not a click
+    if (api.poster) return;
     select(api.pick(e.clientX, e.clientY));
   });
 

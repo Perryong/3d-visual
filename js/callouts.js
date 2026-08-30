@@ -113,7 +113,13 @@ export function createCallouts(layer, svg, parts, api) {
   function updateGuides(w, h) {
     const pts = { left: [], right: [] };
     api.groups.forEach((grp) => {
-      anchorBox.setFromObject(grp);
+      // Measure only the plate cap, not e.g. L-07's oversized background
+      // quad, which would otherwise drag a guide endpoint off-screen.
+      anchorBox.makeEmpty();
+      grp.traverse((o) => {
+        if (o.userData.isPlate) anchorBox.expandByObject(o);
+      });
+      if (anchorBox.isEmpty()) anchorBox.setFromObject(grp);
       if (anchorBox.isEmpty()) return;
       const y = anchorBox.max.y;
       const xs = [anchorBox.min.x, anchorBox.max.x];

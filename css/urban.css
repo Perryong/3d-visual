@@ -115,4 +115,6 @@ body.is-poster .callouts { display: none; }
 body.is-poster .control--slider,
 body.is-poster .control--presets,
 body.is-poster .control--toggles .switch { display: none; }
+body.is-poster #btn-reset,
+body.is-poster .panel__actions { display: none; }
 .guide { fill: none; stroke: var(--dimmer); stroke-width: 1; stroke-dasharray: 4 6; }
