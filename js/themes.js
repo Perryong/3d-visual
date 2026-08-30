@@ -26,4 +26,5 @@ export const URBAN_THEME = {
   maxDistance: 180,
   maxPolarAngle: Math.PI * 0.48,
   select: { color: 0xd9480f, emissive: 0x000000 },
+  poster: { azimuth: 30, elevation: 35, explodeStep: 5.2, fit: 1.12 },
 };

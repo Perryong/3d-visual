@@ -19,8 +19,25 @@ export function createScene(canvas, { build, theme }) {
   const scene = new THREE.Scene();
   if (theme.fog) scene.fog = new THREE.Fog(theme.clear, theme.fog.near, theme.fog.far);
 
-  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 400);
-  camera.position.set(...theme.camera);
+  const poster = theme.poster || null;
+  const camera = poster
+    ? new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 600)
+    : new THREE.PerspectiveCamera(34, 1, 0.1, 400);
+  if (poster) {
+    const az = THREE.MathUtils.degToRad(poster.azimuth);
+    const el = THREE.MathUtils.degToRad(poster.elevation);
+    const stackH = 6 * poster.explodeStep;
+    const centre = new THREE.Vector3(0, stackH / 2, 0);
+    camera.position.set(
+      centre.x + 200 * Math.cos(el) * Math.sin(az),
+      centre.y + 200 * Math.sin(el),
+      centre.z + 200 * Math.cos(el) * Math.cos(az)
+    );
+    camera.lookAt(centre);
+    camera.userData.halfH = ((stackH + 30) / 2) * poster.fit;
+  } else {
+    camera.position.set(...theme.camera);
+  }
 
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
@@ -28,7 +45,8 @@ export function createScene(canvas, { build, theme }) {
   controls.minDistance = theme.minDistance;
   controls.maxDistance = theme.maxDistance;
   controls.maxPolarAngle = theme.maxPolarAngle;
-  controls.target.set(...theme.target);
+  controls.target.set(...(poster ? [0, 3 * poster.explodeStep, 0] : theme.target));
+  controls.enabled = !poster;
 
   // ---- Lighting ---------------------------------------------------------
   scene.add(new THREE.HemisphereLight(0x9fd6f2, 0x0a1a26, 1.15));
@@ -203,7 +221,13 @@ export function createScene(canvas, { build, theme }) {
     const h = canvas.clientHeight;
     if (w === 0 || h === 0) return;
     renderer.setSize(w, h, false);
-    camera.aspect = w / h;
+    if (camera.isOrthographicCamera) {
+      const hh = camera.userData.halfH;
+      camera.top = hh; camera.bottom = -hh;
+      camera.right = hh * (w / h); camera.left = -camera.right;
+    } else {
+      camera.aspect = w / h;
+    }
     camera.updateProjectionMatrix();
   }
 
@@ -224,6 +248,7 @@ export function createScene(canvas, { build, theme }) {
     resetView,
     stepTween,
     setDisassembly: (t) => applyDisassembly(groups, t),
+    poster: Boolean(poster),
     get blueprint() {
       return blueprint;
     },

@@ -14,6 +14,13 @@ export function bootSheet({ data, build, theme }) {
   const canvas = document.getElementById('field');
   const api = createScene(canvas, { build, theme });
 
+  if (api.poster) {
+    const step = theme.poster.explodeStep;
+    PARTS.forEach((p, i) => {
+      api.groups.get(p.id)?.userData.explode.set(0, (PARTS.length - 1 - i) * step, 0);
+    });
+  }
+
   const callouts = createCallouts(
     document.getElementById('callout-layer'),
     document.getElementById('leader-layer'),
@@ -172,16 +179,19 @@ export function bootSheet({ data, build, theme }) {
 
   function resizeAll() {
     api.resize();
-    const layer = document.getElementById('callout-layer');
+    // Size the SVG off the canvas, not the label layer: poster mode hides
+    // `#callout-layer` via CSS, which would otherwise zero its clientWidth
+    // and collapse the SVG (and the guides drawn into it) to 0x0.
     const svg = document.getElementById('leader-layer');
-    svg.setAttribute('viewBox', `0 0 ${layer.clientWidth} ${layer.clientHeight}`);
-    svg.setAttribute('width', layer.clientWidth);
-    svg.setAttribute('height', layer.clientHeight);
+    svg.setAttribute('viewBox', `0 0 ${canvas.clientWidth} ${canvas.clientHeight}`);
+    svg.setAttribute('width', canvas.clientWidth);
+    svg.setAttribute('height', canvas.clientHeight);
   }
 
   window.addEventListener('resize', resizeAll);
   resizeAll();
-  setDisassembly(0, { updateSlider: true });
+  setDisassembly(api.poster ? 100 : 0, { updateSlider: true });
+  if (api.poster) slider.disabled = true;
   api.setBlueprint(false);
   syncActionButtons();
   tick();

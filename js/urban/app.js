@@ -13,4 +13,7 @@ const docs = await loadAll(LAYER_FILES);
 data.PARTS.forEach((p) => {
   if (p.files.some((f) => docs[f].failed)) p.name += ' (data unavailable)';
 });
-bootSheet({ data, build: () => buildLayers(docs), theme: URBAN_THEME });
+const poster = new URLSearchParams(location.search).get('view') === 'poster';
+document.body.classList.toggle('is-poster', poster);
+const theme = poster ? URBAN_THEME : { ...URBAN_THEME, poster: null };
+bootSheet({ data, build: () => buildLayers(docs), theme });

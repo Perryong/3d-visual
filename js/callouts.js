@@ -37,6 +37,13 @@ export function createCallouts(layer, svg, parts, api) {
     nodes.set(p.id, { el, line });
   });
 
+  const guides = ['left', 'right'].map(() => {
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    g.setAttribute('class', 'guide');
+    svg.appendChild(g);
+    return g;
+  });
+
   let enabled = true;
   let selectedId = null;
 
@@ -56,9 +63,13 @@ export function createCallouts(layer, svg, parts, api) {
 
   function update() {
     if (!enabled) return;
-    const w = layer.clientWidth;
-    const h = layer.clientHeight;
+    // `svg` (the leader layer) is never hidden in poster mode (`layer`, the
+    // label layer, is) and sheet.js keeps its width/height attributes in
+    // sync with the canvas, so read the shared w/h from it.
+    const w = svg.clientWidth;
+    const h = svg.clientHeight;
     if (!w || !h) return;
+    if (api.poster) return updateGuides(w, h);
 
     const left = [];
     const right = [];
@@ -94,6 +105,32 @@ export function createCallouts(layer, svg, parts, api) {
 
     layoutColumn(left, 'left', w, h);
     layoutColumn(right, 'right', w, h);
+  }
+
+  // Poster mode: no labels; two dashed guides through the plates' left- and
+  // right-most projected corners, like the reference board's alignment lines.
+  const corner = new THREE.Vector3();
+  function updateGuides(w, h) {
+    const pts = { left: [], right: [] };
+    api.groups.forEach((grp) => {
+      anchorBox.setFromObject(grp);
+      if (anchorBox.isEmpty()) return;
+      const y = anchorBox.max.y;
+      const xs = [anchorBox.min.x, anchorBox.max.x];
+      const zs = [anchorBox.min.z, anchorBox.max.z];
+      let minSx = Infinity, maxSx = -Infinity, minP, maxP;
+      xs.forEach((x) => zs.forEach((z) => {
+        corner.set(x, y, z).project(api.camera);
+        const sx = ((corner.x + 1) / 2) * w;
+        const sy = ((1 - corner.y) / 2) * h;
+        if (sx < minSx) { minSx = sx; minP = `${sx},${sy}`; }
+        if (sx > maxSx) { maxSx = sx; maxP = `${sx},${sy}`; }
+      }));
+      pts.left.push(minP);
+      pts.right.push(maxP);
+    });
+    guides[0].setAttribute('points', pts.left.join(' '));
+    guides[1].setAttribute('points', pts.right.join(' '));
   }
 
   function layoutColumn(items, side, w, h) {

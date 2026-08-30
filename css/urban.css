@@ -109,3 +109,10 @@ body::before {
 .control--presets button.is-on {
   background: var(--rule-soft);
 }
+
+/* ── Poster mode: camera/explode plumbing only (layout lands in Task 3) ── */
+body.is-poster .callouts { display: none; }
+body.is-poster .control--slider,
+body.is-poster .control--presets,
+body.is-poster .control--toggles .switch { display: none; }
+.guide { fill: none; stroke: var(--dimmer); stroke-width: 1; stroke-dasharray: 4 6; }
