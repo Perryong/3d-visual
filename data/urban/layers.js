@@ -140,7 +140,6 @@ export const AREAS = {
   central: { x: [-6, 8], z: [-6, 8] },        // catchment + city
   cbd: { x: [-3, 7], z: [-3, 7] },            // Marina Bay / Raffles Place
   punggol: { x: [3, 10], z: [-9, -4] },       // north-east new town
-  jurong: { x: [-16, -8], z: [-2, 6] },       // west industrial + lake district
 };
 
 export const OBSERVATIONS = [

@@ -67,7 +67,7 @@ export function createUI({ onSelect, data }) {
         <h4>Key observations</h4>
         ${data.OBSERVATIONS.map((o, i) => `
           <div class="obs">
-            <div class="thumb" data-layer="${o.layer ?? ''}" data-area="${o.area ?? 'island'}"></div>
+            <div class="thumb" data-layer="${o.layer ?? ''}" data-area="${o.area ?? 'island'}"><canvas></canvas></div>
             <p><strong>${i + 1} · ${o.title}.</strong> ${o.text}</p>
           </div>`).join('')}
       </section>
