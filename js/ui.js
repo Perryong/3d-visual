@@ -6,9 +6,8 @@
  * onSelect, so the three views can never disagree about what is selected.
  */
 
-import { PARTS, GROUPS, PART_BY_ID } from '../data/bom.js';
-
-export function createUI({ onSelect }) {
+export function createUI({ onSelect, data }) {
+  const { PARTS, GROUPS, PART_BY_ID } = data;
   const list = document.getElementById('bom-list');
   const panel = document.getElementById('data-panel');
   const count = document.getElementById('bom-count');

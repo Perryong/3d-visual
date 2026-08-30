@@ -298,6 +298,10 @@ export function buildVehicle(materials) {
     }
   });
 
+  // The track bottoms sit 0.16 m above the local origin; drop the whole
+  // assembly so the vehicle stands on the grid instead of hovering.
+  root.position.y = -0.16;
+
   return { root, groups };
 }
 
