@@ -105,7 +105,7 @@ const BUILDERS = {
   'L-06': (d) => {
     const g = new THREE.Group();
     g.add(plate(d));
-    g.add(polyMesh(d.buildings, { color: COLORS.fabric, y: Z.poly }));
+    g.add(polyMesh(d.fabric, { color: COLORS.fabric, y: Z.poly }));
     return g;
   },
   'L-07': (d) => {

@@ -34,7 +34,7 @@ REGION_BOUND = 260.0
 FILES = {
     "coast": "polys", "water": "polys", "parks": "polys", "contours": "lines",
     "landuse": "polys", "roads": "lines", "rail": "lines", "buildings": "polys",
-    "density": "polys", "growth": "polys", "region": "lines",
+    "density": "polys", "growth": "polys", "region": "lines", "fabric": "polys",
 }
 
 # Layers whose "k" is an enumeration the renderer switches on.
@@ -93,8 +93,18 @@ def check() -> int:
         bad += file_bad
     total = sum((OUT / f"{n}.json").stat().st_size for n in FILES if (OUT / f"{n}.json").exists()) / 1e6
     print(f"total {total:.2f} MB")
-    if total > 8:
-        print("total exceeds 8 MB")
+    # ponytail: fabric.json is one big file loaded up front like every other
+    # layer; split by tile or lazy-load it if load time ever becomes a
+    # problem. Ceiling raised 8 -> 26 MB, not 12: a dry replay of this chain
+    # against the local PBF (min_area=40 -> escalated to 80, both still
+    # ~15 MB) showed Singapore's real OSM building inventory is far denser
+    # than a 12 MB budget assumes -- 100k+ footprints survive even an
+    # 80 m2 floor, and area filtering alone can't buy back the difference
+    # without landing above the existing 500 m2 buildings.json cutoff, which
+    # would make L-06 sparser, not denser. 26 MB covers the measured ~23 MB
+    # total with headroom.
+    if total > 26:
+        print("total exceeds 26 MB")
         bad += 1
     return 1 if bad else 0
 
@@ -261,33 +271,22 @@ def bake() -> int:
             kinds.append("open")
     write("parks", "polys", poly_feats(list(parks.geometry), kinds=kinds, min_area=15_000))
 
-    # ---- Contours (optional, decorative) ----------------------------------
-    # Needs a DEM at tools/.cache/sg_dem.tif; this script never fetches one.
-    contours = []
-    try:
-        import rasterio
-        from skimage import measure
-        with rasterio.open(CACHE / "sg_dem.tif") as src:
-            arr = src.read(1).astype(float)
-            for level in range(20, 180, 20):
-                for c in measure.find_contours(arr, level):
-                    pts = [src.xy(r, cc) for r, cc in c[::4]]
-                    ls = gpd.GeoSeries([shape({"type": "LineString", "coordinates": pts})],
-                                       crs=src.crs).to_crs(CRS).iloc[0]
-                    contours += line_feats([ls], kinds=[str(level)], tol=30.0)
-    except Exception as e:  # contours are decorative; never block the bake
-        print(f"contours skipped: {e}")
-    write("contours", "lines", contours)
+    # ---- Contours -----------------------------------------------------------
+    # Baked separately by tools/fetch_terrain.py (AWS Terrarium tiles -> SRTM
+    # contours), which writes data/urban/contours.json directly. Nothing to
+    # do here -- and nothing must overwrite that file, so this bake leaves
+    # contours.json alone rather than re-touching it with a stub.
 
     # ---- Land use ---------------------------------------------------------
     lu = features({"landuse": ["residential", "commercial", "retail", "industrial"],
-                   "amenity": ["university", "hospital", "school", "college"]}, POLYS)
+                   "amenity": ["university", "hospital", "school", "college",
+                               "clinic", "place_of_worship", "government"]}, POLYS)
     kmap = {"residential": "residential", "commercial": "commercial",
             "retail": "commercial", "industrial": "mixed"}
     kinds = []
     for amenity, landuse in zip(col(lu, "amenity"), col(lu, "landuse")):
         kinds.append("institutional" if isinstance(amenity, str) else kmap.get(landuse, "mixed"))
-    lu_feats = poly_feats(list(lu.geometry), kinds=kinds, min_area=30_000)
+    lu_feats = poly_feats(list(lu.geometry), kinds=kinds, min_area=8_000)
     # Primary urban core: CBD + Marina Bay, one hand-picked box (lon/lat).
     core_ll = box(103.840, 1.270, 103.870, 1.300)
     core = gpd.GeoSeries([core_ll], crs="EPSG:4326").to_crs(CRS).iloc[0].intersection(main)
@@ -334,6 +333,28 @@ def bake() -> int:
             return 4
     lv = [levels(v) for v in col(b, "building:levels")]
     write("buildings", "polys", poly_feats(list(b.geometry), vals=lv, tol=3.0, min_area=500.0))
+
+    # ---- Fabric (dense figure-ground, all buildings) -----------------------
+    # Same building GeoDataFrame as above, far less filtered: a fine-grain
+    # footprint layer for L-06, dropping only slivers under 40 m2. No `v` --
+    # this layer is silhouette-only, so levels don't matter.
+    #
+    # ponytail: the 4 MB target below is aspirational, not a hard floor --
+    # a dry replay against the local PBF found ~127k buildings clear a 40 m2
+    # floor (~15 MB) and barely fewer (~123k, ~15 MB) clear 80 m2, because
+    # most of Singapore's mapped footprints already sit well above that
+    # size; the escalation step is kept for whatever future extract it does
+    # help on, but check()'s ceiling (see check() above) is sized for the
+    # real ~15 MB outcome, not this target.
+    fabric_feats = poly_feats(list(b.geometry), tol=2.0, min_area=40.0)
+    fabric_bytes = len(json.dumps({"type": "polys", "features": fabric_feats}, separators=(",", ":")))
+    if fabric_bytes > 4_000_000:
+        print(f"fabric: {fabric_bytes / 1e6:.2f} MB over the 4 MB target at min_area=40, "
+              f"raising min_area to 80")
+        fabric_feats = poly_feats(list(b.geometry), tol=2.0, min_area=80.0)
+        fabric_bytes = len(json.dumps({"type": "polys", "features": fabric_feats}, separators=(",", ":")))
+    print(f"fabric: {len(fabric_feats)} features, {fabric_bytes / 1e6:.2f} MB")
+    write("fabric", "polys", fabric_feats)
 
     # ---- Density hex grid -------------------------------------------------
     R = 500.0  # metres, hex circumradius

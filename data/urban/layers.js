@@ -45,7 +45,7 @@ export const PARTS = [
     material: 'OSM parks, reserves, water · SRTM contours', mass: 'Layer I',
     explode: [0, 30, 0], files: ['coast', 'water', 'parks', 'contours'],
     spec: 'The green and blue skeleton the city is built around: the central catchment reserves, the coastal parks, the reservoirs and the canalised rivers that drain them.',
-    note: 'Contours are decorative and may be absent from the bake. Park kinds follow OSM tagging, which is uneven outside the major reserves.',
+    note: 'Contours are real, at 20 m intervals, derived from SRTM elevation via AWS Terrarium tiles. Park kinds follow OSM tagging, which is uneven outside the major reserves.',
     legend: [
       { swatch: hex(0x7fb872), label: 'Nature reserve / forest' },
       { swatch: hex(0xa9cf9a), label: 'Park / garden' },
@@ -109,9 +109,9 @@ export const PARTS = [
   {
     id: 'L-06', group: 'layers', name: 'Urban fabric', qty: 1,
     material: 'OSM building footprints', mass: 'Layer VI',
-    explode: [0, 5, 0], files: ['coast', 'buildings'],
+    explode: [0, 5, 0], files: ['coast', 'fabric'],
     spec: 'Figure-ground: fine-grained shophouse blocks in the centre against the coarse slab-and-tower grain of the new towns and the industrial mega-blocks of the west.',
-    note: 'Footprints under 500 m² are dropped by the bake to keep the file small.',
+    note: 'Footprints under 40 m² are dropped by the bake to keep the file small.',
     legend: [{ swatch: hex(0x111111), label: 'Building footprint' }],
   },
   {

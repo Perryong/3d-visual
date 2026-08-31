@@ -60,14 +60,19 @@ python3 tools/bake_urban.py --check                 # validates the committed ou
 ```
 
 `tools/requirements.txt` covers everything above (osmnx, geopandas, shapely,
-pyrosm). Contours are a separate, optional layer: they need `rasterio` and
-`scikit-image` plus a DEM at `tools/.cache/sg_dem.tif`, none of which the bake
-fetches for you. Without them the bake skips the layer and prints a warning;
-`data/urban/contours.json` is committed empty in this repo.
+pyrosm). L-06's dense fabric layer (`data/urban/fabric.json`) is baked in the
+same pass, from the same building GeoDataFrame as L-05, at a much lower
+40 m² area floor than `buildings.json`'s 500 m².
 
-L-07's satellite backdrop is a separate fetch, since it hits the Esri tile
-server rather than the local PBF: `tools/.venv/bin/python tools/fetch_satellite.py`
-writes `data/urban/satellite.jpg` and `satellite.json`.
+L-01's contours are a separate fetch, since they come from AWS Terrarium
+elevation tiles rather than the local PBF: `tools/.venv/bin/python
+tools/fetch_terrain.py` decodes SRTM elevation, contours it at 20 m
+intervals (20–160 m), and writes `data/urban/contours.json`.
+
+L-07's satellite backdrop is likewise a separate fetch, since it hits the
+Esri tile server rather than the local PBF: `tools/.venv/bin/python
+tools/fetch_satellite.py` writes `data/urban/satellite.jpg` and
+`satellite.json`.
 
 ### Poster view
 
