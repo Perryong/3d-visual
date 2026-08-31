@@ -156,6 +156,7 @@ body.is-poster .data { padding: 0; }
 body.is-poster .data__block h4 { font: 600 14px/1.2 var(--display); letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--rule); padding-bottom: 6px; }
 
 /* bottom strip */
+.attrib { position: absolute; left: 24px; bottom: 48px; font-size: 9px; color: var(--dimmer); }
 .scale { position: absolute; left: 24px; bottom: 20px; width: 220px; font-size: 10px; color: var(--text); }
 .scale__rule { display: flex; height: 6px; border: 1px solid var(--text); }
 .scale__rule i { flex: 1; }

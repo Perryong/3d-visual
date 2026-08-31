@@ -65,6 +65,10 @@ pyrosm). Contours are a separate, optional layer: they need `rasterio` and
 fetches for you. Without them the bake skips the layer and prints a warning;
 `data/urban/contours.json` is committed empty in this repo.
 
+L-07's satellite backdrop is a separate fetch, since it hits the Esri tile
+server rather than the local PBF: `tools/.venv/bin/python tools/fetch_satellite.py`
+writes `data/urban/satellite.jpg` and `satellite.json`.
+
 ### Poster view
 
 `urban.html?view=poster` lays the board out as a portrait analysis poster: fixed

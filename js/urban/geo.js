@@ -140,6 +140,24 @@ export function extrudeMesh(doc, { y = 0, heightFn, colorFn, filter }) {
   return mesh;
 }
 
+// Satellite bbox docs are {x:[xMin,xMax], z:[zMin,zMax]} in scene units (see
+// tools/fetch_satellite.py). The source mosaic is a plain north-up image
+// (row 0 = north edge, col 0 = west edge), and PlaneGeometry's default UVs
+// plus three's default texture flipY already put image row 0 at the local
+// +y edge; flat()'s rotateX(-PI/2) sends local +y to world -z (north), local
+// +x stays world +x (east) -- so the default mapping is already correct and
+// needs no UV/rotation adjustment or mirroring. Verified against the baked
+// data by checking Pulau Tekong renders in the +x/-z (north-east) quadrant.
+export function texturedQuad(bboxDoc, url, { y = 0 } = {}) {
+  const { x, z } = bboxDoc;
+  const geo = flat(new THREE.PlaneGeometry(x[1] - x[0], z[1] - z[0]));
+  const texture = new THREE.TextureLoader().load(url);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide }));
+  mesh.position.set((x[0] + x[1]) / 2, y, (z[0] + z[1]) / 2);
+  return mesh;
+}
+
 export const PLATE_DEPTH = 0.35;
 
 export function plateMesh(coastDoc, { color, side = 0xd9d0bd, outline, y = 0 }) {

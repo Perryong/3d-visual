@@ -194,8 +194,6 @@ def bake() -> int:
         (OUT / f"{name}.json").write_text(json.dumps(doc, separators=(",", ":")))
         print(f"wrote {name}: {len(feats)} features")
 
-    write("coast", "polys", poly_feats(parts, tol=25.0, min_area=50_000))
-
     osm = OSM(str(CACHE / "singapore.osm.pbf"))
 
     def prep(gdf, geom_types):
@@ -223,6 +221,28 @@ def bake() -> int:
 
     POLYS = ["Polygon", "MultiPolygon"]
     LINES = ["LineString", "MultiLineString"]
+
+    # Offshore islands (Sentosa, Tekong, Ubin, Jurong Island, ...): Nominatim's
+    # "Singapore" geocode (main, above) is the country's *territorial* extent,
+    # not a tight mainland-only coastline -- it topologically contains every
+    # real offshore island already (verified against the PBF: main fully
+    # covers a 32 km2 candidate island, intersection area == that island's
+    # whole area), so an "intersects main" exclusion discards every genuine
+    # island rather than deduping anything. main's own centroid-filtered
+    # `parts` list (line ~126) already has nothing else to dedupe against, so
+    # area alone separates real islands from slivers; overlaps between the
+    # islands themselves (two of the 9 candidates here share a boundary) are
+    # deduped via unary_union, then min_area again to drop the sub-threshold
+    # sliver that split can leave behind at a trimmed edge.
+    island_polys = [g for g in features({"place": ["island"]}, POLYS).geometry if g.area >= 500_000]
+    if island_polys:
+        from shapely.ops import unary_union
+        merged = unary_union(island_polys)
+        island_polys = list(getattr(merged, "geoms", [merged]))
+    island_feats = poly_feats(island_polys, tol=15.0, min_area=500_000)
+
+    write("coast", "polys",
+          poly_feats(parts, tol=25.0, min_area=50_000) + island_feats)
 
     # ---- Water ------------------------------------------------------------
     water = features({"natural": ["water"], "waterway": ["river", "canal"]}, POLYS)

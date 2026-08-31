@@ -24,11 +24,6 @@ export function bootSheet({ data, build, theme }) {
       api.setDisassembly(1);
       markDirty();
     };
-    // L-07's 240-unit context quad is sheet-mode scenery; on the poster it
-    // would flood the frame grey.
-    api.root.traverse((o) => {
-      if (o.userData.isRegionBg) o.visible = false;
-    });
   }
 
   const callouts = createCallouts(

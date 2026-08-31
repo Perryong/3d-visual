@@ -116,13 +116,14 @@ export const PARTS = [
   },
   {
     id: 'L-07', group: 'layers', name: 'Regional context', qty: 1,
-    material: 'OSM coastlines, 120 km box', mass: 'Layer VII',
-    explode: [0, 0, 0], files: ['coast', 'region'],
+    material: 'Esri World Imagery mosaic · OSM islands', mass: 'Layer VII',
+    explode: [0, 0, 0], files: ['coast', 'region', 'satellite'],
     spec: 'Singapore sits at the tip of the Malay Peninsula, across the Strait of Johor from Johor Bahru and across the Singapore Strait from Batam and Bintan.',
-    note: 'Coastlines only; the neighbouring land is not filled.',
+    note: 'Satellite imagery is an Esri World Imagery mosaic; the capture date is whatever Esri currently serves, not a fixed epoch. Coastline overlay outlines only; the neighbouring land is not filled.',
     legend: [
       { swatch: hex(0x8a8f99), label: 'Regional coastline' },
       { swatch: hex(0xf3ede2), label: 'Singapore' },
+      { swatch: '#4a5b52', label: 'Satellite imagery (Esri)' },
     ],
   },
 ];

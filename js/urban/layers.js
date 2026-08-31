@@ -7,7 +7,7 @@
 
 import * as THREE from 'three';
 import { PARTS, COLORS } from '../../data/urban/layers.js';
-import { polyMesh, lineSegments, ribbonMesh, extrudeMesh, plateMesh } from './geo.js';
+import { polyMesh, lineSegments, ribbonMesh, extrudeMesh, plateMesh, texturedQuad } from './geo.js';
 
 const Z = { plate: 0, poly: 0.05, poly2: 0.08, poly3: 0.11, line: 0.14, line2: 0.17 };
 
@@ -110,14 +110,17 @@ const BUILDERS = {
   },
   'L-07': (d) => {
     const g = new THREE.Group();
-    const size = 240;
-    const bg = new THREE.Mesh(
-      new THREE.PlaneGeometry(size, size),
-      new THREE.MeshBasicMaterial({ color: COLORS.plateRegion, side: THREE.DoubleSide })
-    );
-    bg.rotation.x = -Math.PI / 2;
-    bg.userData.isRegionBg = true; // sheet-mode context only; the poster hides it
-    bg.position.y = Z.plate - 0.02;
+    const bg = d.satellite?.x
+      ? texturedQuad(d.satellite, './data/urban/satellite.jpg', { y: Z.plate - 0.02 })
+      : new THREE.Mesh(
+          new THREE.PlaneGeometry(240, 240),
+          new THREE.MeshBasicMaterial({ color: COLORS.plateRegion, side: THREE.DoubleSide })
+        );
+    if (!d.satellite?.x) {
+      bg.rotation.x = -Math.PI / 2;
+      bg.position.y = Z.plate - 0.02;
+    }
+    bg.userData.isRegionBg = false;
     g.add(bg);
     g.add(lineSegments(stripRegionFrame(d.region), { color: COLORS.region.coast, y: Z.line }));
     g.add(plate(d));
