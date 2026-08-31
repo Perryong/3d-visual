@@ -10,11 +10,15 @@ Source is a local OSM PBF extract parsed with pyrosm (no Overpass: the public
 mirrors rate-limit this workload), plus Natural Earth land polygons for the
 regional context layer. Fetch both into tools/.cache/ once:
 
-    curl -L -o tools/.cache/singapore.osm.pbf https://download.bbbike.org/osm/bbbike/Singapore/Singapore.osm.pbf
+    curl -L -o tools/.cache/msb.osm.pbf https://download.geofabrik.de/asia/malaysia-singapore-brunei-latest.osm.pbf
     curl -L -o tools/.cache/ne_10m_land.zip https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip
 
-The island outline still comes from osmnx's Nominatim geocode, served from the
-osmnx cache in tools/.cache/; the bake needs no network once that is warm.
+The Malaysia-Singapore-Brunei extract, not a Singapore-only one, because the
+Singapore-only BBBike extract clips off the real south coast (Tuas, the
+south/southwest shore) -- `bake()` passes pyrosm a bounding_box to keep the
+read scoped to the working area. The scene's origin/scale still come from
+osmnx's Nominatim geocode, served from the osmnx cache in tools/.cache/; the
+bake needs no network once that is warm.
 
 Scene units: the main island spans 40 units east-west, origin at the main
 island centroid, +x east, +z south (three.js Y-up right-handed). All files
@@ -95,16 +99,22 @@ def check() -> int:
     print(f"total {total:.2f} MB")
     # ponytail: fabric.json is one big file loaded up front like every other
     # layer; split by tile or lazy-load it if load time ever becomes a
-    # problem. Ceiling raised 8 -> 26 MB, not 12: a dry replay of this chain
+    # problem. Ceiling raised 8 -> 30 MB, not 12: a dry replay of this chain
     # against the local PBF (min_area=40 -> escalated to 80, both still
     # ~15 MB) showed Singapore's real OSM building inventory is far denser
     # than a 12 MB budget assumes -- 100k+ footprints survive even an
     # 80 m2 floor, and area filtering alone can't buy back the difference
     # without landing above the existing 500 m2 buildings.json cutoff, which
-    # would make L-06 sparser, not denser. 26 MB covers the measured ~23 MB
-    # total with headroom.
-    if total > 26:
-        print("total exceeds 26 MB")
+    # would make L-06 sparser, not denser. The full MSB extract (south strip
+    # included, Johor excluded via the content clip) measured ~28-29 MB; 30
+    # covers that with a little headroom. Only the 4 MB-target escalation
+    # inside bake() adjusts fabric's min_area -- one escalation mechanism,
+    # not two; a second, total-triggered one used to live here and got
+    # deleted (it couldn't converge: 40->80 already barely moves the needle,
+    # so re-baking fabric again off a total that's still over just repeats
+    # the same small shave for nothing).
+    if total > 30:
+        print("total exceeds 30 MB")
         bad += 1
     return 1 if bad else 0
 
@@ -114,7 +124,7 @@ def bake() -> int:
     import osmnx as ox
     from pyrosm import OSM
     from shapely.geometry import box, shape
-    from shapely.ops import linemerge
+    from shapely.ops import linemerge, unary_union
 
     CACHE = Path(__file__).resolve().parent / ".cache"
     ox.settings.use_cache = True
@@ -124,16 +134,17 @@ def bake() -> int:
     CRS = "EPSG:3414"  # SVY21 / Singapore TM, metres
     OUT.mkdir(parents=True, exist_ok=True)
 
-    # ---- Coastline / island polygons ---------------------------------------
+    # ---- Projection basis (Nominatim geocode) ------------------------------
+    # `main` is used ONLY to fix cx/cy/scale below -- coast.json's own
+    # polygons now come from the PBF's place=island tags (see ~line 240),
+    # not from this geocode, but satellite.json and fetch_terrain.py replay
+    # these same constants, so they must keep coming from this exact geocode.
     sg = ox.geocode_to_gdf("Singapore").to_crs(CRS)
     land = sg.geometry.iloc[0]
-    parts = sorted(getattr(land, "geoms", [land]), key=lambda g: -g.area)
-    main = parts[0]
-    # Nominatim's Singapore boundary drags in a distant maritime polygon (and
-    # Pedra Branca); both sit close enough to main's edge that an edge-to-edge
-    # distance doesn't exclude them, but their centroids are 60-220 km from
-    # main's centroid (the callout anchor), so measure centroid to centroid.
-    parts = [p for p in parts if p.centroid.distance(main.centroid) < 30_000]
+    main = sorted(getattr(land, "geoms", [land]), key=lambda g: -g.area)[0]
+    # cx, cy, scale are fixed HERE, once, from this original Nominatim `main`
+    # polygon, and every later section's xz() call closes over these same
+    # three names -- `main` itself must never be reassigned after this point.
     cx, cy = main.centroid.x, main.centroid.y
     minx, _, maxx, _ = main.bounds
     scale = ISLAND_WIDTH_UNITS / (maxx - minx)
@@ -204,7 +215,13 @@ def bake() -> int:
         (OUT / f"{name}.json").write_text(json.dumps(doc, separators=(",", ":")))
         print(f"wrote {name}: {len(feats)} features")
 
-    osm = OSM(str(CACHE / "singapore.osm.pbf"))
+    # The BBBike Singapore-only extract clipped the real south coast (Tuas,
+    # the south/southwest shore) out of its own bounding rectangle -- every
+    # PBF-sourced layer fell short of the true island there. The Geofabrik
+    # Malaysia-Singapore-Brunei extract covers it; `bounding_box` limits
+    # pyrosm's read to the working area instead of parsing all three
+    # countries.
+    osm = OSM(str(CACHE / "msb.osm.pbf"), bounding_box=[103.55, 1.13, 104.12, 1.53])
 
     def prep(gdf, geom_types):
         """Any pyrosm result -> non-null wanted geometry, projected, 0..n indexed.
@@ -232,35 +249,52 @@ def bake() -> int:
     POLYS = ["Polygon", "MultiPolygon"]
     LINES = ["LineString", "MultiLineString"]
 
-    # Offshore islands (Sentosa, Tekong, Ubin, Jurong Island, ...): Nominatim's
-    # "Singapore" geocode (main, above) is the country's *territorial* extent,
-    # not a tight mainland-only coastline -- it topologically contains every
-    # real offshore island already (verified against the PBF: main fully
-    # covers a 32 km2 candidate island, intersection area == that island's
-    # whole area), so an "intersects main" exclusion discards every genuine
-    # island rather than deduping anything. main's own centroid-filtered
-    # `parts` list (line ~126) already has nothing else to dedupe against, so
-    # area alone separates real islands from slivers; overlaps between the
-    # islands themselves (two of the 9 candidates here share a boundary) are
-    # deduped via unary_union, then min_area again to drop the sub-threshold
-    # sliver that split can leave behind at a trimmed edge.
-    island_polys = [g for g in features({"place": ["island"]}, POLYS).geometry if g.area >= 500_000]
-    if island_polys:
-        from shapely.ops import unary_union
-        merged = unary_union(island_polys)
-        island_polys = list(getattr(merged, "geoms", [merged]))
-    island_feats = poly_feats(island_polys, tol=15.0, min_area=500_000)
+    # Coastline: every place=island polygon from the PBF (main island plus
+    # Sentosa, Tekong, Ubin, Jurong Island, ...), not the Nominatim geocode --
+    # that's the country's *territorial* extent (a bulge into the Strait that
+    # reaches Batam), not a tight coastline. area >= 0.5 km2 drops slivers;
+    # the centroid bound drops territorial-water / neighbouring-country
+    # candidates (Batam among them) that clear the area bar but sit outside
+    # the plausible island field; overlaps between what's left (two of the
+    # candidates here share a boundary) are deduped via unary_union, then
+    # min_area again to drop the sub-threshold sliver that split can leave
+    # behind at a trimmed edge. Largest (the main island) gets the coarser
+    # coastline tolerance; the rest, being small, get the finer one.
+    candidates = [g for g in features({"place": ["island"]}, POLYS).geometry if g.area >= 500_000]
+    islands = []
+    for g in candidates:
+        ix, iz = xz(g.centroid.x, g.centroid.y)
+        if -22 <= ix <= 23 and -13 <= iz <= 13:
+            islands.append(g)
+    if islands:
+        merged = unary_union(islands)
+        islands = list(getattr(merged, "geoms", [merged]))
+    islands.sort(key=lambda g: -g.area)
 
     write("coast", "polys",
-          poly_feats(parts, tol=25.0, min_area=50_000) + island_feats)
+          poly_feats(islands[:1], tol=25.0, min_area=500_000)
+          + poly_feats(islands[1:], tol=15.0, min_area=500_000))
+
+    # ---- Content clip -------------------------------------------------------
+    # Everything below is sourced from the wider Malaysia-Singapore-Brunei
+    # extract, which reaches across the Strait into Johor Bahru -- clip every
+    # PBF-sourced layer to Singapore's own islands (buffered 300 m so a
+    # feature that merely touches the coast isn't dropped for sitting a few
+    # metres over the line) so nothing floats off the plate. Growth/region/
+    # satellite are untouched: hand-authored or already scoped to their own
+    # boxes. Contours are clipped separately, by z bound, in fetch_terrain.py.
+    singapore = unary_union(islands).buffer(300)
+
+    def clip(gdf):
+        return gdf[gdf.geometry.intersects(singapore)].reset_index(drop=True)
 
     # ---- Water ------------------------------------------------------------
-    water = features({"natural": ["water"], "waterway": ["river", "canal"]}, POLYS)
+    water = clip(features({"natural": ["water"], "waterway": ["river", "canal"]}, POLYS))
     write("water", "polys", poly_feats(list(water.geometry), min_area=20_000))
 
     # ---- Parks ------------------------------------------------------------
-    parks = features({"leisure": ["park", "nature_reserve", "garden"],
-                      "landuse": ["forest", "grass", "recreation_ground"]}, POLYS)
+    parks = clip(features({"leisure": ["park", "nature_reserve", "garden"],
+                           "landuse": ["forest", "grass", "recreation_ground"]}, POLYS))
     kinds = []
     for leisure, landuse in zip(col(parks, "leisure"), col(parks, "landuse")):
         if leisure == "nature_reserve" or landuse == "forest":
@@ -278,14 +312,18 @@ def bake() -> int:
     # contours.json alone rather than re-touching it with a stub.
 
     # ---- Land use ---------------------------------------------------------
-    lu = features({"landuse": ["residential", "commercial", "retail", "industrial"],
-                   "amenity": ["university", "hospital", "school", "college",
-                               "clinic", "place_of_worship", "government"]}, POLYS)
+    # "government" is tagged office=government on this PBF, not amenity=government
+    # (amenity=government matches 0 features here) -- keep both keys queried.
+    lu = clip(features({"landuse": ["residential", "commercial", "retail", "industrial"],
+                        "amenity": ["university", "hospital", "school", "college",
+                                    "clinic", "place_of_worship"],
+                        "office": ["government"]}, POLYS))
     kmap = {"residential": "residential", "commercial": "commercial",
             "retail": "commercial", "industrial": "mixed"}
     kinds = []
-    for amenity, landuse in zip(col(lu, "amenity"), col(lu, "landuse")):
-        kinds.append("institutional" if isinstance(amenity, str) else kmap.get(landuse, "mixed"))
+    for amenity, landuse, office in zip(col(lu, "amenity"), col(lu, "landuse"), col(lu, "office")):
+        is_institutional = isinstance(amenity, str) or isinstance(office, str)
+        kinds.append("institutional" if is_institutional else kmap.get(landuse, "mixed"))
     lu_feats = poly_feats(list(lu.geometry), kinds=kinds, min_area=8_000)
     # Primary urban core: CBD + Marina Bay, one hand-picked box (lon/lat).
     core_ll = box(103.840, 1.270, 103.870, 1.300)
@@ -294,7 +332,7 @@ def bake() -> int:
     write("landuse", "polys", lu_feats)
 
     # ---- Roads ------------------------------------------------------------
-    edges = prep(osm.get_network(network_type="driving"), LINES)
+    edges = clip(prep(osm.get_network(network_type="driving"), LINES))
     def road_kind(h):
         h = h[0] if isinstance(h, list) else h
         if h in ("motorway", "trunk", "primary", "motorway_link", "trunk_link"):
@@ -312,7 +350,7 @@ def bake() -> int:
     write("roads", "lines", line_feats(road_geoms, kinds=road_kinds, tol=15.0))
 
     # ---- Rail -------------------------------------------------------------
-    rail = features({"railway": ["subway", "light_rail"]}, LINES)
+    rail = clip(features({"railway": ["subway", "light_rail"]}, LINES))
     rail["n"] = [n if isinstance(n, str) else "" for n in col(rail, "name")]
     rail_geoms, rail_names = [], []
     for n, grp in rail.groupby("n"):
@@ -325,7 +363,7 @@ def bake() -> int:
     # ponytail: whole-island footprints are the size ceiling. min_area is the
     # knob that keeps the bundle under 8 MB (150 m2 -> 13 MB, 500 m2 -> 6.2 MB);
     # for finer footprints, split buildings.json by tile and load on demand.
-    b = prep(osm.get_buildings(), POLYS)
+    b = clip(prep(osm.get_buildings(), POLYS))
     def levels(v):
         try:
             return max(1, int(float(str(v).split(";")[0])))

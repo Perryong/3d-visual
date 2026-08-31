@@ -39,7 +39,18 @@ ISLAND_WIDTH_UNITS = 40.0  # must match tools/bake_urban.py
 LEVELS = list(range(20, 180, 20))  # 20, 40, ..., 160
 DOWNSAMPLE = 3        # keep every 3rd contour point
 MIN_POINTS = 6        # drop contours shorter than this (after downsampling)
-X_BOUND, Z_BOUND = 25.0, 18.0   # drop contours with any point outside these
+# Drop contours with any point outside these -- whole-feature drop, not a
+# clip: a contour that dips outside the box is discarded entirely rather
+# than trimmed at the boundary. X is a plain +-bound; Z is asymmetric
+# because the fetched tile grid is z11-tile-aligned, not bbox-aligned, so
+# the stitched mosaic naturally overshoots the requested lat range on both
+# edges (e.g. its southern edge reaches into Batam/Bintan, whose hills would
+# otherwise show up on L-01 south of the Singapore plate). [-13, 13.5] keeps
+# contours to Singapore + a thin margin (lat 1.15 -> z=~12.6, lat 1.48 ->
+# z=~-12.4), matching the real bake_urban.py coastline instead of the wider
+# tile-grid fetch box.
+X_BOUND = 25.0
+Z_MIN, Z_MAX = -13.0, 13.5
 
 
 def lonlat_to_tilexy(lon, lat, z):
@@ -128,7 +139,7 @@ def build_contours():
             # pixel (row, col) -> fractional tile coords -> lon/lat
             lonlat = [tilexy_to_lonlat(xt0 + col / TILE, yt0 + row / TILE, Z) for row, col in pts_px]
             scene = xz([ll[0] for ll in lonlat], [ll[1] for ll in lonlat])
-            if any(abs(x) > X_BOUND or abs(zc) > Z_BOUND for x, zc in scene):
+            if any(abs(x) > X_BOUND or zc < Z_MIN or zc > Z_MAX for x, zc in scene):
                 continue
             features.append({"p": scene, "k": str(level), "n": None})
             kept += 1
