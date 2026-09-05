@@ -5,6 +5,8 @@
 <script type="module">
   import { parseTwoHr, parseTwentyFourHr, parseFourDay } from './wx.js';
   import { iconFor } from './icons.js';
+  import { frameTimestamps, frameUrl } from './radar.js';
+  import { parseObservations } from './obs.js';
 
   const load = (n) => fetch(`./fixtures/${n}.json`).then((r) => r.json());
   const [twoHr, dayFc, fourDay] = await Promise.all([
@@ -47,6 +49,32 @@
     'Fair & Warm', 'Strong Winds', 'Showery', 'Overcast', 'Drizzle',
   ])
     check(`icons: ${known}`, iconFor(known) !== '❓');
+
+  // Radar timeline (pure; fixed instant 2026-09-05T06:17:30Z = 14:17:30 SGT)
+  const ts = frameTimestamps(new Date('2026-09-05T06:17:30Z'));
+  check('radar: 25 frames', ts.length === 25);
+  check('radar: newest is 202609051415', ts[0] === '202609051415');
+  check('radar: oldest is 202609051215', ts[24] === '202609051215');
+  check('radar: all mod-5 minutes', ts.every((t) => Number(t.slice(10)) % 5 === 0));
+  check('radar: strictly descending 5-min steps', ts.every((t, i) =>
+    i === 0 || (Number(ts[i - 1].slice(8, 10)) * 60 + Number(ts[i - 1].slice(10))) -
+               (Number(t.slice(8, 10)) * 60 + Number(t.slice(10))) === 5 ||
+               t.slice(0, 8) !== ts[i - 1].slice(0, 8)));
+  check('radar: url pattern', frameUrl('202609051415') ===
+    'https://www.weather.gov.sg/files/rainarea/50km/v2/dpsri_70km_2026090514150000dBR.dpsri.png');
+  // SGT is client-TZ independent: same instant expressed differently
+  check('radar: TZ-independent', frameTimestamps(new Date('2026-09-04T23:59:59Z'))[0] === '202609050755');
+
+  // Observations (fixtures)
+  const [tj, sj, dj] = await Promise.all([
+    load('air-temperature'), load('wind-speed'), load('wind-direction'),
+  ]);
+  const obs = parseObservations(tj, sj, dj);
+  check('obs: >=15 stations', obs.stations.length >= 15);
+  check('obs: finite coords', obs.stations.every((s) => Number.isFinite(s.lat) && Number.isFinite(s.lon)));
+  check('obs: some temps', obs.stations.some((s) => Number.isFinite(s.tempC)));
+  check('obs: some wind joined', obs.stations.some((s) => Number.isFinite(s.windKt) && Number.isFinite(s.windDeg)));
+  check('obs: updated is a date', obs.updated instanceof Date && !isNaN(obs.updated));
 
   document.getElementById('out').textContent = results.join('\n');
   console.log(results.join('\n'));
