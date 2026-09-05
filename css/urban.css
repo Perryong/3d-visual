@@ -178,3 +178,20 @@ body.is-poster .sheet__foot { border: none; justify-content: flex-end; }
   body.is-poster .sheet__foot { display: none; }
   body.is-poster .sheet { margin: 0; max-width: none; }
 }
+
+/* ── Poster home: call-to-action into the interactive sheet ──────────── */
+body.is-poster #view-link {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 9px 16px;
+  background: var(--amber);
+  color: #ffffff;
+  border: none;
+  font: 600 13px/1 var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+body.is-poster #view-link:hover { background: #b93a0a; color: #ffffff; }
+.view-hint { display: none; }
+body.is-poster .view-hint { display: block; margin: 6px 0 0; font-size: 11px; color: var(--dim); }

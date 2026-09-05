@@ -13,12 +13,22 @@ const docs = await loadAll(LAYER_FILES);
 data.PARTS.forEach((p) => {
   if (p.files.some((f) => docs[f].failed)) p.name += ' (data unavailable)';
 });
-const poster = new URLSearchParams(location.search).get('view') === 'poster';
+// Poster is the home view; the interactive sheet lives behind ?view=sheet
+// (old ?view=poster links still resolve to the poster).
+const poster = new URLSearchParams(location.search).get('view') !== 'sheet';
 document.body.classList.toggle('is-poster', poster);
 const link = document.getElementById('view-link');
 if (poster) {
-  link.href = 'index.html';
-  link.textContent = 'Sheet';
+  link.href = '?view=sheet';
+  link.textContent = 'Explore Singapore in 3D \u2192';
+  // Promote the link to a call-to-action in the header so visitors see
+  // there is an interactive version of this board.
+  const hint = document.createElement('p');
+  hint.className = 'view-hint';
+  hint.textContent = 'Open the interactive sheet: rotate the stack, pull the layers apart, click anything for its data.';
+  const ident = document.querySelector('.ident');
+  ident.appendChild(link);
+  ident.appendChild(hint);
   document.getElementById('btn-png').hidden = false;
   // @page can't be scoped by selector; only add it on the poster view.
   document.head.insertAdjacentHTML(

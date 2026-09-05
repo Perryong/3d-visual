@@ -1,6 +1,6 @@
 # Singapore — multi-dimensional urban analysis
 
-An interactive analysis board: Singapore as seven exploded axonometric map
+A poster-first analysis board: Singapore as seven exploded axonometric map
 layers (natural systems, land use, transport, development evolution, building
 height & density, urban fabric, regional context) built from real
 OpenStreetMap data. The disassembly slider spreads the stack, callouts and
@@ -26,12 +26,16 @@ CDN by the import map in `index.html`.
 Deployment: pushes to `main` publish to GitHub Pages via
 `.github/workflows/deploy.yml`.
 
-## Poster view
+## Views
 
-`index.html?view=poster` lays the board out as a portrait analysis poster:
-fixed axonometric stack with alignment guides, numbered modules on the left,
-key observations with live thumbnails on the right, scale bar and compass.
-"Save PNG" exports the 3D field; use the browser's print for the whole board.
+The root (`index.html`) is the portrait analysis poster: fixed axonometric
+stack with alignment guides, numbered modules on the left, key observations
+with live thumbnails on the right, scale bar and compass. "Save PNG" exports
+the 3D field; use the browser's print for the whole board.
+
+`index.html?view=sheet` is the interactive sheet behind the poster's
+"Explore Singapore in 3D" button: orbit the stack, drive the disassembly
+slider, click layers/callouts for their data.
 
 ## Re-baking the data
 
