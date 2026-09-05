@@ -113,9 +113,6 @@ export function bootSheet({ data, build, theme }) {
   }
 
   // ---- Toggles ------------------------------------------------------------
-  const blueprintToggle = document.getElementById('toggle-blueprint');
-  blueprintToggle?.addEventListener('change', () => api.setBlueprint(blueprintToggle.checked));
-
   const calloutToggle = document.getElementById('toggle-callouts');
   calloutToggle.addEventListener('change', () => callouts.setEnabled(calloutToggle.checked));
 
@@ -237,7 +234,6 @@ export function bootSheet({ data, build, theme }) {
   resizeAll();
   setDisassembly(api.poster ? 100 : 0, { updateSlider: true });
   if (api.poster) slider.disabled = true;
-  api.setBlueprint(false);
   syncActionButtons();
   tick();
 

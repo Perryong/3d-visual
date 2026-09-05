@@ -9,7 +9,6 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { applyDisassembly } from './parts.js';
 
 export function createScene(canvas, { build, theme }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -60,21 +59,8 @@ export function createScene(canvas, { build, theme }) {
     : null;
   if (grid) scene.add(grid);
 
-  // ---- Materials --------------------------------------------------------
-  const mk = (color, opts = {}) =>
-    new THREE.MeshStandardMaterial({ color, roughness: 0.72, metalness: 0.12, ...opts });
-
-  const materials = {
-    body: mk(0x2c5171),
-    dark: mk(0x1a3245),
-    accentBody: mk(0x37678a),
-    glass: mk(0x7fe6ff, { emissive: 0x16617a, roughness: 0.25, metalness: 0.4 }),
-    rubber: mk(0x14222f, { roughness: 0.95, metalness: 0.02 }),
-  };
-  const materialList = Object.values(materials);
-
   // ---- Model ------------------------------------------------------------
-  const { root, groups } = build(materials);
+  const { root, groups } = build();
   scene.add(root);
 
   // ---- Edge overlay -----------------------------------------------------
@@ -135,19 +121,6 @@ export function createScene(canvas, { build, theme }) {
       grp.visible = !partId || id === partId;
     });
     if (grid) grid.visible = true;
-  }
-
-  // ---- Blueprint mode ---------------------------------------------------
-  let blueprint = false;
-  function setBlueprint(on) {
-    blueprint = on;
-    materialList.forEach((m) => {
-      m.transparent = on;
-      m.opacity = on ? 0.22 : 1;
-      m.depthWrite = !on;
-      m.needsUpdate = true;
-    });
-    edgeMat.opacity = on ? 0.95 : theme.edge?.opacity ?? 0.55;
   }
 
   // ---- Picking ----------------------------------------------------------
@@ -258,15 +231,34 @@ export function createScene(canvas, { build, theme }) {
     pick,
     setSelected,
     setIsolated,
-    setBlueprint,
     focusOn,
     resetView,
     stepTween,
     setDisassembly: (t) => applyDisassembly(groups, t),
     poster: Boolean(poster),
-    get blueprint() {
-      return blueprint;
-    },
   };
   return api;
+}
+
+/**
+ * Moves every part between its assembled and fully separated position.
+ * `t` runs 0 (assembled) to 1 (full disassembly).
+ */
+function applyDisassembly(groups, t) {
+  groups.forEach((grp) => {
+    const { home, explode, paired } = grp.userData;
+    if (!home) return;
+    if (paired) {
+      // The pair splits outward; the group itself only travels in Y and Z.
+      grp.position.set(home.x, home.y + explode.y * t, home.z + explode.z * t);
+      const spread = Math.abs(explode.x) * t;
+      grp.children.forEach((child) => {
+        const hl = child.userData.homeLocal;
+        if (!hl) return;
+        child.position.x = hl.x + spread * (child.userData.side || 1);
+      });
+    } else {
+      grp.position.copy(home).addScaledVector(explode, t);
+    }
+  });
 }

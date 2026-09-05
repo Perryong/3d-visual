@@ -17,7 +17,7 @@ const poster = new URLSearchParams(location.search).get('view') === 'poster';
 document.body.classList.toggle('is-poster', poster);
 const link = document.getElementById('view-link');
 if (poster) {
-  link.href = 'urban.html';
+  link.href = 'index.html';
   link.textContent = 'Sheet';
   document.getElementById('btn-png').hidden = false;
   // @page can't be scoped by selector; only add it on the poster view.

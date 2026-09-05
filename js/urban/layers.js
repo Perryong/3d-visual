@@ -1,7 +1,7 @@
 /**
  * Seven analytical layers as exploded groups. Each builder takes the loaded
  * JSON docs and returns a THREE.Group sitting at y = 0; the stack order and
- * spacing come from PARTS[i].explode, which applyDisassembly() in parts.js
+ * spacing come from PARTS[i].explode, which applyDisassembly() in scene.js
  * already knows how to drive.
  */
 
