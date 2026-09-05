@@ -63,6 +63,7 @@ export function createRadar({ field, project, onResize }) {
   let frames = []; // [{ts, url}]
   let idx = 0;
   let timer = null;
+  let gen = 0;
 
   function label(ts) {
     return `${ts.slice(8, 10)}:${ts.slice(10)}`;
@@ -91,6 +92,7 @@ export function createRadar({ field, project, onResize }) {
 
   async function refresh() {
     pause();
+    const g = ++gen;
     const candidates = frameTimestamps();
     const loads = candidates.map((ts) => new Promise((res) => {
       const probe = new Image();
@@ -99,6 +101,7 @@ export function createRadar({ field, project, onResize }) {
       probe.src = frameUrl(ts);
     }));
     const loaded = (await Promise.all(loads)).filter(Boolean);
+    if (g !== gen) return frames.length;
     frames = loaded.reverse(); // oldest → newest
     if (!frames.length) throw new Error('no radar frames available');
     scrub.max = String(frames.length - 1);

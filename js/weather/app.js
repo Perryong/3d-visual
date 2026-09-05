@@ -38,7 +38,7 @@ async function load(kind) {
 }
 
 async function loadRadarTab() {
-  radar.refresh().then(() => { state.radarErr = null; }).catch((e) => {
+  radar.refresh().then(() => { state.radarErr = null; if (state.tab === 'radar') renderTab(); }).catch((e) => {
     state.radarErr = e.message;
     if (state.tab === 'radar') renderTab();
   });
