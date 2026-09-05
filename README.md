@@ -42,7 +42,10 @@ slider, click layers/callouts for their data.
 `weather.html` shows live official forecasts on the same map: the 2-hour
 forecast for all 47 NEA areas, the 24-hour regional forecast with its time
 periods, and the 4-day outlook — fetched in the browser from data.gov.sg's
-open real-time APIs (no key). Forecasts © data.gov.sg.
+open real-time APIs (no key). Forecasts © data.gov.sg. The Radar tab
+(default) animates the last two hours of NEA rain-radar frames (5-minute
+snapshots, © NEA / weather.gov.sg) with live temperature and wind readings
+from island-wide stations.
 
 ## Re-baking the data
 
