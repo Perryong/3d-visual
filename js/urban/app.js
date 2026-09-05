@@ -23,11 +23,19 @@ if (poster) {
   link.textContent = 'Explore Singapore in 3D \u2192';
   // Promote the link to a call-to-action in the header so visitors see
   // there is an interactive version of this board.
+  link.classList.add('cta');
+  const wx = document.createElement('a');
+  wx.className = 'cta';
+  wx.href = './weather.html';
+  wx.textContent = 'Check the weather \u2192';
+  const row = document.createElement('div');
+  row.className = 'cta-row';
+  row.append(link, wx);
   const hint = document.createElement('p');
   hint.className = 'view-hint';
   hint.textContent = 'Open the interactive sheet: rotate the stack, pull the layers apart, click anything for its data.';
   const ident = document.querySelector('.ident');
-  ident.appendChild(link);
+  ident.appendChild(row);
   ident.appendChild(hint);
   document.getElementById('btn-png').hidden = false;
   // @page can't be scoped by selector; only add it on the poster view.

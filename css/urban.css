@@ -180,9 +180,8 @@ body.is-poster .sheet__foot { border: none; justify-content: flex-end; }
 }
 
 /* ── Poster home: call-to-action into the interactive sheet ──────────── */
-body.is-poster #view-link {
+body.is-poster .cta {
   display: inline-block;
-  margin-top: 14px;
   padding: 9px 16px;
   background: var(--amber);
   color: #ffffff;
@@ -192,6 +191,8 @@ body.is-poster #view-link {
   text-transform: uppercase;
   text-decoration: none;
 }
-body.is-poster #view-link:hover { background: #b93a0a; color: #ffffff; }
+body.is-poster .cta:hover { background: #b93a0a; color: #ffffff; }
 .view-hint { display: none; }
 body.is-poster .view-hint { display: block; margin: 6px 0 0; font-size: 11px; color: var(--dim); }
+
+.cta-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
