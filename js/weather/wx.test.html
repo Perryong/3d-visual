@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>weather checks</title>
+<pre id="out"></pre>
+<script type="module">
+  import { parseTwoHr, parseTwentyFourHr, parseFourDay } from './wx.js';
+  import { iconFor } from './icons.js';
+
+  const load = (n) => fetch(`./fixtures/${n}.json`).then((r) => r.json());
+  const [twoHr, dayFc, fourDay] = await Promise.all([
+    load('two-hr-forecast'), load('twenty-four-hr-forecast'), load('four-day-outlook'),
+  ]);
+
+  const results = [];
+  const check = (name, ok) => results.push(`${ok ? 'PASS' : 'FAIL'} ${name}`);
+
+  const t = parseTwoHr(twoHr);
+  check('2h: 47 areas', t.areas.length === 47);
+  check('2h: finite coords', t.areas.every((a) => Number.isFinite(a.lon) && Number.isFinite(a.lat)));
+  check('2h: every area has a forecast', t.areas.every((a) => typeof a.forecast === 'string' && a.forecast.length > 0));
+  check('2h: updated is a date', t.updated instanceof Date && !isNaN(t.updated));
+
+  const d = parseTwentyFourHr(dayFc);
+  check('24h: >=1 period', d.periods.length >= 1);
+  check('24h: all five regions each period', d.periods.every((p) =>
+    ['north', 'south', 'east', 'west', 'central'].every((r) => typeof p.regions[r] === 'string')));
+  check('24h: general temps', Number.isFinite(d.general.tempLow) && d.general.tempHigh >= d.general.tempLow);
+
+  const f = parseFourDay(fourDay);
+  check('4d: 4 days', f.days.length === 4);
+  check('4d: temp ranges sane', f.days.every((x) => x.tempHigh >= x.tempLow));
+
+  const texts = new Set([
+    ...t.areas.map((a) => a.forecast),
+    ...d.periods.flatMap((p) => Object.values(p.regions)),
+    d.general.forecast,
+    ...f.days.map((x) => x.forecast),
+  ]);
+  check('icons: no unknown forecast text in fixtures', [...texts].every((x) => iconFor(x) !== '❓'));
+
+  // Icon table sanity beyond today's fixtures (today may be all "Fair (Day)")
+  for (const known of ['Thundery Showers', 'Light Rain', 'Cloudy', 'Windy', 'Partly Cloudy (Night)', 'Showers'])
+    check(`icons: ${known}`, iconFor(known) !== '❓');
+
+  document.getElementById('out').textContent = results.join('\n');
+  console.log(results.join('\n'));
+</script>
