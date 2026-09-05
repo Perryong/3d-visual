@@ -37,6 +37,13 @@ the 3D field; use the browser's print for the whole board.
 "Explore Singapore in 3D" button: orbit the stack, drive the disassembly
 slider, click layers/callouts for their data.
 
+## Weather
+
+`weather.html` shows live official forecasts on the same map: the 2-hour
+forecast for all 47 NEA areas, the 24-hour regional forecast with its time
+periods, and the 4-day outlook — fetched in the browser from data.gov.sg's
+open real-time APIs (no key). Forecasts © data.gov.sg.
+
 ## Re-baking the data
 
 The bake reads the full Geofabrik Malaysia–Singapore–Brunei PBF extract via `pyrosm`
