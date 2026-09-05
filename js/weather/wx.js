@@ -19,6 +19,7 @@ export async function fetchForecast(kind) {
 export function parseTwoHr(json) {
   const d = json.data;
   const item = d.items[0];
+  if (!item) throw new Error('two-hr-forecast: empty response');
   const byArea = new Map(item.forecasts.map((f) => [f.area, f.forecast]));
   return {
     updated: new Date(item.update_timestamp ?? item.timestamp),
@@ -34,6 +35,7 @@ export function parseTwoHr(json) {
 
 export function parseTwentyFourHr(json) {
   const r = json.data.records[0];
+  if (!r) throw new Error('twenty-four-hr-forecast: empty response');
   const g = r.general;
   return {
     updated: new Date(r.updatedTimestamp),
@@ -54,11 +56,13 @@ export function parseTwentyFourHr(json) {
 
 export function parseFourDay(json) {
   const r = json.data.records[0];
+  if (!r) throw new Error('four-day-outlook: empty response');
   return {
     updated: new Date(r.updatedTimestamp),
     days: r.forecasts.map((f) => ({
       day: f.day, date: f.timestamp?.slice(0, 10) ?? '',
       forecast: f.forecast?.text ?? '',
+      summary: f.forecast?.summary ?? '',
       tempLow: f.temperature?.low, tempHigh: f.temperature?.high,
       humidityLow: f.relativeHumidity?.low, humidityHigh: f.relativeHumidity?.high,
       windDir: f.wind?.direction ?? '', windLow: f.wind?.speed?.low, windHigh: f.wind?.speed?.high,

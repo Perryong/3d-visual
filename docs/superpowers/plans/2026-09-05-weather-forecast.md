@@ -196,7 +196,7 @@ export function iconFor(text) {
 
 Order matters: night variants and rain intensities are matched before the generic `partly cloudy`/`fair` patterns; keep new entries above the generic ones.
 
-- [ ] **Step 5: Run the test page** — all PASS (13 checks), no console errors (a `console.warn` from `iconFor` counts as a FAIL of the no-unknown check, not an error).
+- [ ] **Step 5: Run the test page** — all PASS (16 checks), no console errors (a `console.warn` from `iconFor` counts as a FAIL of the no-unknown check, not an error).
 
 - [ ] **Step 6: Commit** — `git add js/weather` — "Weather: API parsers, icon table, fixture tests".
 

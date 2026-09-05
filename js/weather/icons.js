@@ -8,12 +8,15 @@ const TABLE = [
   [/heavy rain/i, '🌧️'],
   [/moderate rain|^rain$/i, '🌧️'],
   [/light rain|drizzle/i, '🌦️'],
+  [/heavy showers/i, '🌧️'],
   [/showers/i, '🌦️'],
+  [/showery/i, '🌦️'],
   [/fair.*night|clear.*night|partly cloudy \(night\)/i, '🌙'],
   [/partly cloudy/i, '🌤️'],
   [/cloudy|overcast/i, '☁️'],
   [/hazy|haze|mist|fog/i, '🌫️'],
   [/windy|wind/i, '🌬️'],
+  [/fair.*warm|warm/i, '🌞'],
   [/fair|sunny|warm/i, '☀️'],
 ];
 

@@ -38,8 +38,14 @@
   ]);
   check('icons: no unknown forecast text in fixtures', [...texts].every((x) => iconFor(x) !== '❓'));
 
-  // Icon table sanity beyond today's fixtures (today may be all "Fair (Day)")
-  for (const known of ['Thundery Showers', 'Light Rain', 'Cloudy', 'Windy', 'Partly Cloudy (Night)', 'Showers'])
+  // Icon table sanity beyond today's fixtures: the full NEA forecast-text list.
+  for (const known of [
+    'Fair', 'Fair (Day)', 'Fair (Night)', 'Fair and Warm', 'Partly Cloudy', 'Partly Cloudy (Day)',
+    'Partly Cloudy (Night)', 'Cloudy', 'Hazy', 'Slightly Hazy', 'Windy', 'Mist', 'Fog', 'Light Rain',
+    'Moderate Rain', 'Heavy Rain', 'Passing Showers', 'Light Showers', 'Showers', 'Heavy Showers',
+    'Thundery Showers', 'Heavy Thundery Showers', 'Heavy Thundery Showers with Gusty Winds',
+    'Fair & Warm', 'Strong Winds', 'Showery', 'Overcast', 'Drizzle',
+  ])
     check(`icons: ${known}`, iconFor(known) !== '❓');
 
   document.getElementById('out').textContent = results.join('\n');

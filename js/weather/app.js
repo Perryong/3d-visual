@@ -12,7 +12,8 @@ const REGION_ANCHORS = {
   west: [103.7, 1.35], central: [103.82, 1.36],
 };
 
-const map = await createWeatherMap(document.getElementById('field'));
+const map = await createWeatherMap(document.getElementById('field'))
+  .catch(() => ({ project: () => ({ x: -9999, y: -9999 }), onResize: () => {} }));
 const markerLayer = document.getElementById('marker-layer');
 const panelTitle = document.getElementById('panel-title');
 const panelBody = document.getElementById('panel-body');
@@ -63,18 +64,28 @@ map.onResize(() => document.querySelectorAll('#marker-layer .wx').forEach(placeE
 function errBlock(kind, label) {
   const div = document.createElement('div');
   div.className = 'wx-error';
-  div.innerHTML = `${label} unavailable (${state.err[kind]}). <button type="button" class="reset">Retry</button>`;
-  div.querySelector('button').addEventListener('click', () => load(kind));
+  const msg = document.createTextNode(`${label} unavailable (${state.err[kind]}). `);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'reset';
+  btn.textContent = 'Retry';
+  btn.addEventListener('click', () => load(kind));
+  div.append(msg, btn);
   return div;
 }
 
 function renderTab() {
   markerLayer.textContent = '';
   panelBody.textContent = '';
-  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('is-on', t.dataset.tab === state.tab));
+  document.querySelectorAll('.tab').forEach((t) => {
+    const isOn = t.dataset.tab === state.tab;
+    t.classList.toggle('is-on', isOn);
+    t.setAttribute('aria-selected', String(isOn));
+  });
 
   const d2 = state.data['2h'];
-  updatedEl.textContent = `updated ${fmtTime(state.data[state.tab]?.updated)}`;
+  if (state.data[state.tab] || state.err[state.tab])
+    updatedEl.textContent = `updated ${fmtTime(state.data[state.tab]?.updated)}`;
 
   if (state.tab === '2h') {
     panelTitle.textContent = '2-hour forecast';
@@ -95,6 +106,7 @@ function renderTab() {
     const d = state.data['24h'];
     if (!d) return;
     const p = d.periods[Math.min(state.period, d.periods.length - 1)];
+    if (!p) { panelBody.textContent = 'No period data.'; return; }
     Object.entries(REGION_ANCHORS).forEach(([region, [lon, lat]]) => {
       marker(lon, lat, iconFor(p.regions[region]), region.toUpperCase(), 'wx--region');
     });
@@ -121,7 +133,7 @@ function renderTab() {
     if (d2) d2.areas.forEach((a) => marker(a.lon, a.lat, iconFor(a.forecast), a.name, 'wx--dim'));
     panelBody.innerHTML = d.days.map((x) => `
       <div class="wx-card"><h3>${x.day} <small>${x.date}</small></h3>
-        <p>${iconFor(x.forecast)} ${x.forecast}</p>
+        <p>${iconFor(x.forecast)} ${x.summary || x.forecast}</p>
         <p>${x.tempLow}–${x.tempHigh} °C · ${x.humidityLow}–${x.humidityHigh} % RH · wind ${x.windDir} ${x.windLow}–${x.windHigh} km/h</p></div>`).join('');
   }
 }

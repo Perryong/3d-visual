@@ -32,7 +32,7 @@ export async function createWeatherMap(canvas) {
   cam.position.set(1, 100, -1); // roughly the island centre
   cam.lookAt(1, 0, -1);
 
-  const HALF = 23; // island z-extent ~25.4 units + margin fits the tighter axis
+  const HALF = 23; // island z-extent ~28.2 units + margin fits the tighter axis
 
   function resize() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
