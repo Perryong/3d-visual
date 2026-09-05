@@ -22,7 +22,9 @@ export function createThumbs(api, canvas) {
   // resize, a re-fit, or a selection change (which rebuilds the canvases).
   let dirty = true;
   const markDirty = () => { dirty = true; };
-  window.addEventListener('scroll', markDirty, { passive: true });
+  // capture phase: the sheet view's data panel scrolls internally, and
+  // element scrolls don't bubble — capture catches both it and the window.
+  window.addEventListener('scroll', markDirty, { passive: true, capture: true });
   window.addEventListener('resize', markDirty);
 
   function update() {

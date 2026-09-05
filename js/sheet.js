@@ -39,7 +39,7 @@ export function bootSheet({ data, build, theme }) {
   const ui = createUI({ onSelect: select, data });
 
   let thumbs = null;
-  if (api.poster && data.OBSERVATIONS) {
+  if (data.OBSERVATIONS) {
     import('./urban/thumbs.js').then(({ createThumbs }) => {
       thumbs = createThumbs(api, document.getElementById('thumb-canvas'));
       markDirty();
