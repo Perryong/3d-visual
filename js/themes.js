@@ -6,8 +6,9 @@ export const URBAN_THEME = {
   fog: null,
   grid: null,
   edge: null,
-  camera: [0, 44, 52],
-  target: [0, 18, 0],
+  // Home view: top-down, north up — the stack reads as a flat composite map.
+  camera: [0, 72, 0.1],
+  target: [0, 0, 0],
   minDistance: 30,
   maxDistance: 180,
   maxPolarAngle: Math.PI * 0.48,
