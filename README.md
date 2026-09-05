@@ -41,13 +41,14 @@ and density assumes four storeys wherever OSM has no `building:levels`.
 
 ### Re-baking the data
 
-The bake reads a local BBBike Singapore PBF extract via `pyrosm`, plus a
+The bake reads the full Geofabrik Malaysia–Singapore–Brunei PBF extract via `pyrosm`
+(bbox-filtered to Singapore; a Singapore-only extract truncates the south coast), plus a
 Natural Earth 10m land extract for the regional context layer — no Overpass
 calls, since the public mirrors rate-limit this workload. Fetch both once
 (see the docstring in `tools/bake_urban.py` for the exact commands):
 
 ```bash
-curl -L -o tools/.cache/singapore.osm.pbf https://download.bbbike.org/osm/bbbike/Singapore/Singapore.osm.pbf
+curl -L -o tools/.cache/msb.osm.pbf https://download.geofabrik.de/asia/malaysia-singapore-brunei-latest.osm.pbf
 curl -L -o tools/.cache/ne_10m_land.zip https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip
 ```
 
