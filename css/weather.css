@@ -1,0 +1,37 @@
+@import url('./sheet.css');
+
+:root {
+  --ink: #ffffff;
+  --plate: #faf8f4;
+  --plate-2: #faf8f4;
+  --rule: #d9d4ca;
+  --rule-soft: #e8e4dc;
+  --line: #1a1a1a;
+  --text: #1a1a1a;
+  --dim: #6d6a63;
+  --dimmer: #9c988f;
+  --amber: #d9480f;
+}
+
+body { background: var(--ink); overflow: hidden; }
+.wx-body { display: grid; grid-template-columns: 1fr 340px; height: 100%; min-height: 0; }
+.sheet { display: grid; grid-template-rows: auto 1fr; height: 100dvh; }
+.field { position: relative; min-width: 0; }
+#field { position: absolute; inset: 0; width: 100%; height: 100%; }
+#marker-layer { position: absolute; inset: 0; pointer-events: none; }
+.tabs { display: flex; gap: 8px; align-items: center; }
+.tab { padding: 8px 14px; border: 1px solid var(--rule); background: none; font: 600 12px/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; }
+.tab.is-on { background: var(--amber); color: #fff; border-color: var(--amber); }
+.wx { position: absolute; transform: translate(-50%, -50%); pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: 0; background: none; border: none; padding: 2px; }
+.wx__icon { font-size: 17px; line-height: 1; filter: drop-shadow(0 0 2px #fff); }
+.wx__name { font-size: 9px; background: rgba(255,255,255,0.85); padding: 0 3px; display: none; }
+.wx:hover .wx__name, .wx.is-pinned .wx__name { display: block; }
+.wx--region .wx__icon { font-size: 30px; }
+.wx--region .wx__name { display: block; font-size: 10px; }
+.wx--dim { opacity: 0.35; }
+.chip { padding: 5px 10px; border: 1px solid var(--rule); background: none; font-size: 11px; }
+.chip.is-on { background: var(--text); color: var(--ink); }
+.wx-card { border-top: 1px solid var(--rule); padding: 10px 0; }
+.wx-card h3 { margin: 0 0 4px; font: 600 13px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.06em; }
+.wx-error { border: 1px solid var(--amber); padding: 10px; margin: 10px 0; font-size: 12px; }
+.attrib { position: absolute; left: 12px; bottom: 8px; margin: 0; font-size: 9px; color: var(--dimmer); }
