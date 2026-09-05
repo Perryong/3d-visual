@@ -28,6 +28,60 @@ CDN by the import map in `index.html`.
 To publish it, push to GitHub and turn on Pages for the default branch root.
 The `.nojekyll` file is there so Pages serves the directories as-is.
 
+## Second sheet: Singapore urban analysis board
+
+`urban.html` shows Singapore as seven exploded analytical map layers built
+from OpenStreetMap. Same controls as the tank sheet: the disassembly slider
+spreads the stack, callouts and list rows select a layer, the right panel
+holds observations and the legend.
+
+Geometry is real; the analytical classifications are not authoritative.
+Growth areas are hand-traced boxes, the urban core is a hand-picked box,
+and density assumes four storeys wherever OSM has no `building:levels`.
+
+### Re-baking the data
+
+The bake reads the full Geofabrik Malaysia–Singapore–Brunei PBF extract via `pyrosm`
+(bbox-filtered to Singapore; a Singapore-only extract truncates the south coast), plus a
+Natural Earth 10m land extract for the regional context layer — no Overpass
+calls, since the public mirrors rate-limit this workload. Fetch both once
+(see the docstring in `tools/bake_urban.py` for the exact commands):
+
+```bash
+curl -L -o tools/.cache/msb.osm.pbf https://download.geofabrik.de/asia/malaysia-singapore-brunei-latest.osm.pbf
+curl -L -o tools/.cache/ne_10m_land.zip https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip
+```
+
+Then bake and validate:
+
+```bash
+python3 -m venv tools/.venv && tools/.venv/bin/pip install -r tools/requirements.txt
+tools/.venv/bin/python tools/bake_urban.py          # parses the local extracts, writes data/urban/*.json
+python3 tools/bake_urban.py --check                 # validates the committed outputs
+```
+
+`tools/requirements.txt` covers everything above (osmnx, geopandas, shapely,
+pyrosm). L-06's dense fabric layer (`data/urban/fabric.json`) is baked in the
+same pass, from the same building GeoDataFrame as L-05, at a much lower
+40 m² area floor than `buildings.json`'s 500 m².
+
+L-01's contours are a separate fetch, since they come from AWS Terrarium
+elevation tiles rather than the local PBF: `tools/.venv/bin/python
+tools/fetch_terrain.py` decodes SRTM elevation, contours it at 20 m
+intervals (20–160 m), and writes `data/urban/contours.json`.
+
+L-07's satellite backdrop is likewise a separate fetch, since it hits the
+Esri tile server rather than the local PBF: `tools/.venv/bin/python
+tools/fetch_satellite.py` writes `data/urban/satellite.jpg` and
+`satellite.json`.
+
+### Poster view
+
+`urban.html?view=poster` lays the board out as a portrait analysis poster: fixed
+axonometric stack with alignment guides, numbered modules on the left, key
+observations with live thumbnails on the right, scale bar and compass. "Save
+PNG" exports the 3D field; use the browser's print for the whole board.
+
 ## How it fits together
 
 | File | Job |

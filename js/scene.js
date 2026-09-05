@@ -9,30 +9,41 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { buildVehicle, applyDisassembly } from './parts.js';
+import { applyDisassembly } from './parts.js';
 
-const INK = 0x070f18;
-const LINE = 0x5cc8f2;
-const SELECT = 0xf2a33c;
-
-export function createScene(canvas) {
+export function createScene(canvas, { build, theme }) {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(INK, 1);
+  renderer.setClearColor(theme.clear, 1);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(INK, 28, 62);
+  if (theme.fog) scene.fog = new THREE.Fog(theme.clear, theme.fog.near, theme.fog.far);
 
-  const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 400);
-  camera.position.set(12.5, 7.5, 14);
+  const poster = theme.poster || null;
+  const camera = poster
+    ? new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 600)
+    : new THREE.PerspectiveCamera(34, 1, 0.1, 400);
+  if (poster) {
+    // The poster frame is width-bound, so resize() derives the frustum, the
+    // explode step and the camera placement together; keep the viewing ray
+    // and the (moving) stack centre here for it to work from.
+    camera.userData.az = THREE.MathUtils.degToRad(poster.azimuth);
+    camera.userData.el = THREE.MathUtils.degToRad(poster.elevation);
+    camera.userData.centre = new THREE.Vector3();
+    camera.userData.halfH = 30 * poster.fit; // floor: one plate, if ever taller than wide
+    camera.userData.halfW = 26 * poster.fit;
+  } else {
+    camera.position.set(...theme.camera);
+  }
 
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.07;
-  controls.minDistance = 6;
-  controls.maxDistance = 55;
-  controls.maxPolarAngle = Math.PI * 0.52;
-  controls.target.set(0, 1.6, 0);
+  controls.minDistance = theme.minDistance;
+  controls.maxDistance = theme.maxDistance;
+  controls.maxPolarAngle = theme.maxPolarAngle;
+  if (!poster) controls.target.set(...theme.target);
+  controls.enabled = !poster;
 
   // ---- Lighting ---------------------------------------------------------
   scene.add(new THREE.HemisphereLight(0x9fd6f2, 0x0a1a26, 1.15));
@@ -44,9 +55,10 @@ export function createScene(canvas) {
   scene.add(fill);
 
   // ---- Ground grid ------------------------------------------------------
-  const grid = new THREE.GridHelper(60, 60, 0x1d4258, 0x122d3d);
-  grid.position.y = 0;
-  scene.add(grid);
+  const grid = theme.grid
+    ? new THREE.GridHelper(theme.grid.size, theme.grid.div, theme.grid.c1, theme.grid.c2)
+    : null;
+  if (grid) scene.add(grid);
 
   // ---- Materials --------------------------------------------------------
   const mk = (color, opts = {}) =>
@@ -61,32 +73,42 @@ export function createScene(canvas) {
   };
   const materialList = Object.values(materials);
 
-  // ---- Vehicle ----------------------------------------------------------
-  const { root, groups } = buildVehicle(materials);
-  // The track bottoms sit 0.16 m above the local origin; drop the whole
-  // assembly so the vehicle stands on the grid instead of hovering.
-  root.position.y = -0.16;
+  // ---- Model ------------------------------------------------------------
+  const { root, groups } = build(materials);
   scene.add(root);
 
   // ---- Edge overlay -----------------------------------------------------
   // One LineSegments per mesh, parented to the mesh so it follows every
-  // disassembly move for free.
-  const edgeMat = new THREE.LineBasicMaterial({ color: LINE, transparent: true, opacity: 0.55 });
-  const edges = [];
-  root.traverse((o) => {
-    if (!o.isMesh) return;
-    const seg = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 28), edgeMat);
-    seg.userData.isEdge = true;
-    o.add(seg);
-    edges.push(seg);
+  // disassembly move for free. Sheets whose lines are their own edges
+  // (maps) pass edge: null and skip this.
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: theme.edge?.color ?? 0xffffff,
+    transparent: true,
+    opacity: theme.edge?.opacity ?? 0.55,
   });
+  const edges = [];
+  if (theme.edge) {
+    root.traverse((o) => {
+      if (!o.isMesh) return;
+      const seg = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 28), edgeMat);
+      seg.userData.isEdge = true;
+      o.add(seg);
+      edges.push(seg);
+    });
+  }
 
   // ---- Selection highlight ---------------------------------------------
   const highlightMat = new THREE.MeshStandardMaterial({
-    color: SELECT,
-    emissive: 0x6b3d05,
+    color: theme.select.color,
+    emissive: theme.select.emissive,
     roughness: 0.5,
     metalness: 0.1,
+  });
+  const flatHighlight = new THREE.MeshBasicMaterial({
+    color: theme.select.color,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.DoubleSide,
   });
   const originalMats = new Map();
 
@@ -100,9 +122,9 @@ export function createScene(canvas) {
     const grp = groups.get(partId);
     if (!grp) return;
     grp.traverse((o) => {
-      if (o.isMesh) {
+      if (o.isMesh && !o.userData.noHighlight) {
         originalMats.set(o, o.material);
-        o.material = highlightMat;
+        o.material = o.material.isMeshStandardMaterial ? highlightMat : flatHighlight;
       }
     });
   }
@@ -112,7 +134,7 @@ export function createScene(canvas) {
     groups.forEach((grp, id) => {
       grp.visible = !partId || id === partId;
     });
-    grid.visible = true;
+    if (grid) grid.visible = true;
   }
 
   // ---- Blueprint mode ---------------------------------------------------
@@ -125,7 +147,7 @@ export function createScene(canvas) {
       m.depthWrite = !on;
       m.needsUpdate = true;
     });
-    edgeMat.opacity = on ? 0.95 : 0.55;
+    edgeMat.opacity = on ? 0.95 : theme.edge?.opacity ?? 0.55;
   }
 
   // ---- Picking ----------------------------------------------------------
@@ -196,11 +218,35 @@ export function createScene(canvas) {
     const h = canvas.clientHeight;
     if (w === 0 || h === 0) return;
     renderer.setSize(w, h, false);
+    if (camera.isOrthographicCamera) {
+      const aspect = w / h;
+      const { az, el, centre, halfH, halfW } = camera.userData;
+      const hh = Math.max(halfH, halfW / aspect);
+      // Fit the stack to the frustum rather than the other way round: one
+      // plate's footprint projects to plateH, each explode step of world Y
+      // projects to step * cos(el), and the six gaps get whatever is left of
+      // 82 % of the frame.
+      const plateH = (40 * Math.sin(az) + 26 * Math.cos(az)) * Math.sin(el);
+      const step = THREE.MathUtils.clamp((2 * hh * 0.82 - plateH) / (6 * Math.cos(el)), 4, 40);
+      centre.set(0, (6 * step) / 2, 0);
+      camera.position.set(
+        centre.x + 200 * Math.cos(el) * Math.sin(az),
+        centre.y + 200 * Math.sin(el),
+        centre.z + 200 * Math.cos(el) * Math.cos(az)
+      );
+      camera.lookAt(centre);
+      controls.target.copy(centre);
+      camera.top = hh; camera.bottom = -hh;
+      camera.right = hh * aspect; camera.left = -camera.right;
+      camera.updateProjectionMatrix();
+      api.onPosterFit?.(step);
+      return;
+    }
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
 
-  return {
+  const api = {
     THREE,
     scene,
     camera,
@@ -217,8 +263,10 @@ export function createScene(canvas) {
     resetView,
     stepTween,
     setDisassembly: (t) => applyDisassembly(groups, t),
+    poster: Boolean(poster),
     get blueprint() {
       return blueprint;
     },
   };
+  return api;
 }

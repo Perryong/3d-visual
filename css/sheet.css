@@ -106,6 +106,15 @@ button {
   color: var(--dim);
 }
 
+.ident__sub a {
+  color: var(--line);
+  text-underline-offset: 2px;
+}
+
+.ident__sub a:hover {
+  color: var(--amber);
+}
+
 .titleblock {
   display: grid;
   grid-auto-flow: column;
