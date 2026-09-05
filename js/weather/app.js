@@ -38,7 +38,7 @@ async function load(kind) {
 }
 
 async function loadRadarTab() {
-  radar.refresh().then(() => { state.radarErr = null; if (state.tab === 'radar') renderTab(); }).catch((e) => {
+  radar.refresh().then((n) => { if (n !== null) { state.radarErr = null; if (state.tab === 'radar') renderTab(); } }).catch((e) => {
     state.radarErr = e.message;
     if (state.tab === 'radar') renderTab();
   });
@@ -124,15 +124,7 @@ function renderTab() {
 
   if (state.tab === 'radar') {
     panelTitle.textContent = 'Rain radar';
-    if (state.radarErr) {
-      const div = document.createElement('div');
-      div.className = 'wx-error';
-      div.append(document.createTextNode(`Radar unavailable (${state.radarErr}). `));
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'reset'; b.textContent = 'Retry';
-      b.addEventListener('click', loadRadarTab);
-      div.appendChild(b);
-      panelBody.appendChild(div);
-    }
+    if (state.radarErr) panelBody.appendChild(errBlock2('Radar', state.radarErr));
     if (state.obsErr) panelBody.appendChild(errBlock2('Observations', state.obsErr));
     const chips = document.createElement('div');
     chips.className = 'wx-card';
