@@ -13,6 +13,10 @@
   --amber: #d9480f;
 }
 
+/* sheet.css hardcodes a near-white #e8f4ff title colour meant for the dark
+   sheet theme; override for the paper theme (mirrors urban.css). */
+.ident__designation { color: var(--text); }
+
 body { background: var(--ink); overflow: hidden; }
 .wx-body { display: grid; grid-template-columns: 1fr 340px; height: 100%; min-height: 0; }
 .sheet { display: grid; grid-template-rows: auto 1fr; height: 100dvh; }

@@ -27,7 +27,7 @@ async function load(kind) {
   } catch (e) {
     state.err[kind] = e.message;
   }
-  if (state.tab === kind || kind === '2h') renderTab();
+  if (state.tab === kind || (kind === '2h' && state.tab === '4d')) renderTab();
 }
 
 function loadAllKinds() {
@@ -41,21 +41,24 @@ function fmtTime(d) {
   return d ? d.toLocaleTimeString('en-SG', { hour: '2-digit', minute: '2-digit' }) : '—';
 }
 
+function placeEl(b) {
+  const p = map.project(+b.dataset.lon, +b.dataset.lat);
+  b.style.left = `${p.x}px`;
+  b.style.top = `${p.y}px`;
+}
+
 function marker(lon, lat, icon, name, cls = '') {
   const b = document.createElement('button');
   b.type = 'button';
   b.className = `wx ${cls}`;
   b.innerHTML = `<span class="wx__icon">${icon}</span><span class="wx__name">${name}</span>`;
-  const place = () => {
-    const p = map.project(lon, lat);
-    b.style.left = `${p.x}px`;
-    b.style.top = `${p.y}px`;
-  };
-  place();
-  map.onResize(place);
+  b.dataset.lon = lon;
+  b.dataset.lat = lat;
+  placeEl(b);
   markerLayer.appendChild(b);
   return b;
 }
+map.onResize(() => document.querySelectorAll('#marker-layer .wx').forEach(placeEl));
 
 function errBlock(kind, label) {
   const div = document.createElement('div');
